@@ -1,0 +1,52 @@
+{
+    "baterie-black":  {
+                          "subor":  "vystupy\\20261013-114727_2e1fcec7_1.png",
+                          "taskId":  "2e1fcec7dd7aefe928b37111903de4d2",
+                          "sekund":  72
+                      },
+    "obklad-calacatta":  {
+                             "subor":  "vystupy\\20261013-115144_43174af8_1.png",
+                             "taskId":  "43174af829672be790b329435609fc13",
+                             "sekund":  83.2
+                         },
+    "obklad-graphit":  {
+                           "subor":  "vystupy\\20261013-115209_0c4ba12f_1.png",
+                           "taskId":  "0c4ba12f52ee5d9c0131e53b8ac0fcec",
+                           "sekund":  108.7
+                       },
+    "obklad-travertine":  {
+                              "subor":  "vystupy\\20261013-115128_6d954040_1.png",
+                              "taskId":  "6d9540404d2232d4997a6a09f56b3294",
+                              "sekund":  66.4
+                          },
+    "dlazba-graphite":  {
+                            "subor":  "vystupy\\20261013-115141_8e264f1c_1.png",
+                            "taskId":  "8e264f1c1a407dd488e6c17c72d44bd7",
+                            "sekund":  62.7
+                        },
+    "dlazba-amani":  {
+                         "subor":  "vystupy\\20261013-115139_60b8a36b_1.png",
+                         "taskId":  "60b8a36ba5ffb3a780ddf96a55639062",
+                         "sekund":  55.3
+                     },
+    "baterie-bronze":  {
+                           "subor":  "vystupy\\20261013-115203_93fcbb6b_1.png",
+                           "taskId":  "93fcbb6b20d67b12451a0e60e991711d",
+                           "sekund":  76.4
+                       },
+    "umyvadlo-savoy":  {
+                           "subor":  "vystupy\\20261013-115134_e905c095_1.png",
+                           "taskId":  "e905c0956a720b279f2324532cd48b96",
+                           "sekund":  49.7
+                       },
+    "umyvadlo-okruhle":  {
+                             "subor":  "vystupy\\20261013-115231_300ce6aa_1.png",
+                             "taskId":  "300ce6aa44b5cd854c182249721b1189",
+                             "sekund":  107.5
+                         },
+    "zlab-grafit":  {
+                        "subor":  "vystupy\\20261013-115154_07ae94a6_1.png",
+                        "taskId":  "07ae94a63b75736ed507fea25cfc7eae",
+                        "sekund":  71
+                    }
+}

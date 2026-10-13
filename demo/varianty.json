@@ -1,0 +1,114 @@
+{
+    "podklad": "demo\\zdroje\\KUPELNA_ST1_2048.jpg",
+    "aspectRatio": "4:3",
+    "resolution": "1K",
+    "_kategorie": "typ: podklad = celý obrázok (spodná vrstva); plocha/objekt = vrstva len v oblasti 'roi' (normalizované obdĺžniky x0,y0,x1,y1, ...) tam, kde sa obrázok líši od podkladu. 'nahlad' = výrez pôvodného stavu pre kartu 'Pôvodné'.",
+    "kategorie": [
+        { "id": "obklad",   "nazov": "Obklad stien",  "typ": "podklad", "z": 0, "povodny": "Pôvodný obklad", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.60, 0.15, 0.78, 0.45] },
+        { "id": "dlazba",   "nazov": "Dlažba",        "typ": "plocha",  "z": 1, "povodny": "Pôvodná dlažba", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.36, 0.88, 0.56, 1.00], "roi": [0.00, 0.84, 0.76, 1.00] },
+        { "id": "baterie",  "nazov": "Batérie",       "typ": "objekt",  "z": 4, "prefarbit": true, "povodny": "Chróm (pôvodné)", "povodnyDetail": "Hansgrohe chróm · podľa vizualizácie ST1", "nahlad": [0.17, 0.18, 0.33, 0.45],
+          "roi": [0.17, 0.18, 0.32, 0.73,  0.47, 0.54, 0.53, 0.64,  0.68, 0.55, 0.81, 0.84] },
+        { "id": "umyvadlo", "nazov": "Umývadlo",      "typ": "objekt",  "z": 3, "prefarbit": true, "povodny": "Pôvodné obdĺžnikové", "povodnyDetail": "Na dosku · podľa vizualizácie ST1", "nahlad": [0.40, 0.56, 0.62, 0.71], "roi": [0.40, 0.55, 0.61, 0.70] },
+        { "id": "zlab",     "nazov": "Sprchový žľab", "typ": "objekt",  "z": 2, "povodny": "FlowLine Zero Nerez", "povodnyDetail": "Kaldewei FlowLine Zero · nerez", "nahlad": [0.12, 0.83, 0.36, 0.91], "roi": [0.14, 0.845, 0.33, 0.89] }
+    ],
+    "varianty": [
+        {
+            "id": "obklad-calacatta",
+            "kategoria": "obklad",
+            "nazov": "Florim I CLASSICI Calacatta Gold",
+            "kratko": "Calacatta Gold",
+            "detail": "Florim I Classici · gres 1200 × 2400 mm",
+            "referencie": ["configurator-images-SPT\\Obklad, dlažba\\Florim, gres, formát 1200x2400-2800 mm\\I CLASSICI Calacatta Gold.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the wall cladding with large-format porcelain slabs (1200 x 2400 mm) in exactly the marble pattern, colour and veining shown in the second image. Apply it to every tiled wall surface: the back wall, the left and right side walls, the walls inside the walk-in shower and the tiled front panel of the bathtub. Keep the existing slab layout and joint lines. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the floor tiles; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the shower drain; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "obklad-graphit",
+            "kategoria": "obklad",
+            "nazov": "Florim STONE LIFE Graphit",
+            "kratko": "Stone Life Graphit",
+            "detail": "Florim Stone Life · gres 1200 × 2400 mm",
+            "referencie": ["configurator-images-SPT\\Obklad, dlažba\\Florim, gres, formát 1200x2400-2800 mm\\STONE LIFE Graphit.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the wall cladding with large-format porcelain slabs (1200 x 2400 mm) in exactly the stone pattern and colour shown in the second image. Apply it to every tiled wall surface: the back wall, the left and right side walls, the walls inside the walk-in shower and the tiled front panel of the bathtub. Keep the existing slab layout and joint lines. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the floor tiles; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the shower drain; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "obklad-travertine",
+            "kategoria": "obklad",
+            "nazov": "Florim AUTHENTIC LUXE Gold Travertine",
+            "kratko": "Gold Travertine",
+            "detail": "Florim Authentic Luxe · gres 1200 × 2400 mm",
+            "referencie": ["configurator-images-SPT\\Obklad, dlažba\\Florim, gres, formát 1200x2400-2800 mm\\AUTHENTIC LUXE Gold Travertine.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the wall cladding with large-format porcelain slabs (1200 x 2400 mm) in exactly the travertine pattern, colour and veining shown in the second image. Apply it to every tiled wall surface: the back wall, the left and right side walls, the walls inside the walk-in shower and the tiled front panel of the bathtub. Keep the existing slab layout and joint lines. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the floor tiles; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the shower drain; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "dlazba-graphite",
+            "kategoria": "dlazba",
+            "nazov": "Florim STONE LIFE Graphite 600x600",
+            "kratko": "Stone Life Graphite",
+            "detail": "Florim Stone Life · mat 600 × 600 mm",
+            "referencie": ["configurator-images-SPT\\Obklad, dlažba\\Florim, gres, formát 600x1200 mm, mat. Dlažba formát 600x600 mm, mat\\STONE LIFE Graphite.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the floor tiles, including the floor inside the walk-in shower, with 600 x 600 mm matte porcelain tiles in exactly the stone pattern and colour shown in the second image, laid in a straight grid aligned with the walls. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting; all wall cladding and the tiled front panel of the bathtub; the linear shower drain; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "dlazba-amani",
+            "kategoria": "dlazba",
+            "nazov": "Florim TIMELESS Amani Grey 600x600",
+            "kratko": "Timeless Amani Grey",
+            "detail": "Florim Timeless · mat 600 × 600 mm",
+            "referencie": ["configurator-images-SPT\\Obklad, dlažba\\Florim, gres, formát 600x1200 mm, mat. Dlažba formát 600x600 mm, mat\\TIMELESS Amani Grey.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the floor tiles, including the floor inside the walk-in shower, with 600 x 600 mm matte porcelain tiles in exactly the marble pattern and colour shown in the second image, laid in a straight grid aligned with the walls. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting; all wall cladding and the tiled front panel of the bathtub; the linear shower drain; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "baterie-black",
+            "kategoria": "baterie",
+            "nazov": "Hansgrohe Black matt (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)",
+            "kratko": "Black matt",
+            "detail": "Hansgrohe 24237670 · 73372670 · 13347670",
+            "referencie": [
+                "configurator-images-SPT\\Batéria sprchová\\Hansgrohe Pulsify S Puro Showrpipe 260\\Black matt 24237670.jpg",
+                "configurator-images-SPT\\Batéria umývadlová\\Batéria umývadlová páková Hansgrohe Tecturis S 240 Fine\\Black matt 73372670.jpg",
+                "configurator-images-SPT\\Batéria vaňová\\Hansgrohe Ecostat Element, Pulsify select S\\Black matt 13347670 + 24303670.jpg"
+            ],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the taps and shower fittings with the matte black products shown in the reference images: (1) the exposed shower column with thermostat bar, overhead rain shower, hand shower and hose inside the walk-in shower on the left becomes the shower column from the second image; (2) the washbasin mixer standing behind the white washbasin on the stone shelf becomes the mixer from the third image; (3) the exposed bath thermostat mixer with hand shower and hose on the wall above the bathtub becomes the products from the fourth image. Keep every fitting at exactly the same position, size and orientation as in the first image. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the wall cladding and floor tiles; the glass shower screen and its chrome support bar; the round mirror and its reflection; the stone shelf, the white washbasin and the chrome waste pipe under the shelf; the bath overflow; the shower drain; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "baterie-bronze",
+            "kategoria": "baterie",
+            "nazov": "Hansgrohe Brushed bronze (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)",
+            "kratko": "Brushed bronze",
+            "detail": "Hansgrohe 24237140 · 73372140 · 13347140",
+            "referencie": [
+                "configurator-images-SPT\\Batéria sprchová\\Hansgrohe Pulsify S Puro Showrpipe 260\\Brushed bronze 24237140.jpg",
+                "configurator-images-SPT\\Batéria umývadlová\\Batéria umývadlová páková Hansgrohe Tecturis S 240 Fine\\Brushed bronze 73372140.jpg",
+                "configurator-images-SPT\\Batéria vaňová\\Hansgrohe Ecostat Element, Pulsify select S\\Brushed bronze 13347140+ 24111140+ 28276140+ 28331140.jpg"
+            ],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the taps and shower fittings with the brushed bronze products shown in the reference images: (1) the exposed shower column with thermostat bar, overhead rain shower, hand shower and hose inside the walk-in shower on the left becomes the shower column from the second image; (2) the washbasin mixer standing behind the white washbasin on the stone shelf becomes the mixer from the third image; (3) the exposed bath thermostat mixer with hand shower and hose on the wall above the bathtub becomes the products from the fourth image. Keep every fitting at exactly the same position, size and orientation as in the first image. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the wall cladding and floor tiles; the glass shower screen and its chrome support bar; the round mirror and its reflection; the stone shelf, the white washbasin and the chrome waste pipe under the shelf; the bath overflow; the shower drain; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        },
+        {
+            "id": "umyvadlo-savoy",
+            "kategoria": "umyvadlo",
+            "nazov": "Laufen Savoy 550x380 oválne",
+            "kratko": "Savoy oválne",
+            "detail": "Laufen H8129440001121 · 550 × 380 mm",
+            "referencie": ["configurator-images-SPT\\Umývadlá\\Umývadlo 600 mm alebo 1 ks misy\\Laufen Savoy 550x380 ovalne H8129440001121.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the rectangular white vessel washbasin on the stone shelf with the oval countertop washbasin shown in the second image (Laufen Savoy, 550 x 380 mm, glossy white ceramic), standing on the shelf at the same spot, centred under the existing tap. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the washbasin mixer; the stone shelf and the chrome waste pipe under it; the wall cladding and floor tiles; the glass shower screen; the round mirror and its reflection; all taps and shower fittings; the shower drain; the bathtub; the wooden stool, plant vase, diffuser, soap dispenser, towels and accessories; the ceiling and downlights. Do not add, remove or move anything else. Photorealistic interior render, no text."
+        },
+        {
+            "id": "umyvadlo-okruhle",
+            "kategoria": "umyvadlo",
+            "nazov": "Laufen living SQ 380x380 okrúhle",
+            "kratko": "living SQ okrúhle",
+            "detail": "Laufen H8114350001121 · Ø 380 mm",
+            "referencie": ["configurator-images-SPT\\Umývadlá\\Umývadlo 600 mm alebo 1 ks misy\\Laufen living SQ 380x380 okrúhle H8114350001121.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the rectangular white vessel washbasin on the stone shelf with the round countertop washbasin shown in the second image (Laufen living SQ, 380 mm diameter, matte white ceramic), standing on the shelf at the same spot, centred under the existing tap. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the washbasin mixer; the stone shelf and the chrome waste pipe under it; the wall cladding and floor tiles; the glass shower screen; the round mirror and its reflection; all taps and shower fittings; the shower drain; the bathtub; the wooden stool, plant vase, diffuser, soap dispenser, towels and accessories; the ceiling and downlights. Do not add, remove or move anything else. Photorealistic interior render, no text."
+        },
+        {
+            "id": "zlab-grafit",
+            "kategoria": "zlab",
+            "nazov": "Kaldewei FlowLine Zero Grafit",
+            "kratko": "FlowLine Zero Grafit",
+            "detail": "Kaldewei FlowLine Zero · grafit",
+            "referencie": ["configurator-images-SPT\\Sprchový kút\\Sprchový odtokový žľab\\Kaldewei FlowLine Zero Grafit.jpg"],
+            "prompt": "Edit the first image (a bathroom interior render). Replace ONLY the stainless steel linear shower drain on the floor of the walk-in shower (running along the back wall, with an oval cover in the middle) with the graphite-coloured Kaldewei FlowLine Zero drain shown in the second image, at exactly the same position, length and orientation. Keep everything else exactly as in the first image: same camera position, framing, perspective and lens; same lighting and the warm glow around the round mirror; the wall cladding and floor tiles; the glass shower screen; the round mirror and its reflection; the stone shelf and the white washbasin; all chrome taps and shower fittings; the bathtub; the wooden stool, plant vase, towels and accessories; the ceiling and downlights. Do not add, remove or move anything. Photorealistic interior render, no text."
+        }
+    ]
+}
