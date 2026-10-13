@@ -36,6 +36,9 @@ if ($Ladenie) { New-Item -ItemType Directory -Force -Path $Ladenie | Out-Null }
 
 $LowRadius = 10
 $base = [Obr]::Nacitaj((Join-Path $root $cfg.podklad), $W, $H, 0)
+# 'Original' swatches are cropped from the base photo at its full resolution.
+$srcSize = [Obr]::VelkostSuboru((Join-Path $root $cfg.podklad))
+$baseFull = [Obr]::Nacitaj((Join-Path $root $cfg.podklad), $srcSize.Width, $srcSize.Height, 0)
 $baseBlur = $base.Rozmaz(2)
 $base.UlozJpg((Join-Path $imgDir 'povodny.jpg'), 86)
 
@@ -100,7 +103,7 @@ $kategorie = @()
 $testy = @()
 foreach ($kat in $cfg.kategorie) {
     $n = [double[]]$kat.nahlad
-    $base.Vyrez($n[0], $n[1], $n[2], $n[3]).UlozJpg((Join-Path $imgDir "nahlad-$($kat.id)-povodny.jpg"), 85)
+    $baseFull.Vyrez($n[0], $n[1], $n[2], $n[3]).UlozJpg((Join-Path $imgDir "nahlad-$($kat.id)-povodny.jpg"), 88)
     $moznosti = @([ordered]@{
         id = 'povodny'; nazov = $kat.povodny; kratko = $kat.povodny; detail = $kat.povodnyDetail
         nahlad = "img/nahlad-$($kat.id)-povodny.jpg"

@@ -4,8 +4,8 @@
     "resolution": "1K",
     "_kategorie": "typ: podklad = celý obrázok (spodná vrstva); plocha/objekt = vrstva len v oblasti 'roi' (normalizované obdĺžniky x0,y0,x1,y1, ...) tam, kde sa obrázok líši od podkladu. 'nahlad' = výrez pôvodného stavu pre kartu 'Pôvodné'.",
     "kategorie": [
-        { "id": "obklad",   "nazov": "Obklad stien",  "typ": "podklad", "z": 0, "povodny": "Pôvodný obklad", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.60, 0.15, 0.78, 0.45] },
-        { "id": "dlazba",   "nazov": "Dlažba",        "typ": "plocha",  "z": 1, "povodny": "Pôvodná dlažba", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.36, 0.88, 0.56, 1.00], "roi": [0.00, 0.84, 0.76, 1.00] },
+        { "id": "obklad",   "nazov": "Obklad stien",  "typ": "podklad", "z": 0, "povodny": "Pôvodný obklad", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.655, 0.18, 0.78, 0.3467] },
+        { "id": "dlazba",   "nazov": "Dlažba",        "typ": "plocha",  "z": 1, "povodny": "Pôvodná dlažba", "povodnyDetail": "Svetlý kameň · podľa vizualizácie ST1", "nahlad": [0.19, 0.875, 0.2838, 1.00], "roi": [0.00, 0.84, 0.76, 1.00] },
         { "id": "baterie",  "nazov": "Batérie",       "typ": "objekt",  "z": 4, "prefarbit": true, "povodny": "Chróm (pôvodné)", "povodnyDetail": "Hansgrohe chróm · podľa vizualizácie ST1", "nahlad": [0.17, 0.18, 0.33, 0.45],
           "roi": [0.17, 0.18, 0.32, 0.73,  0.47, 0.54, 0.53, 0.64,  0.68, 0.55, 0.81, 0.84] },
         { "id": "umyvadlo", "nazov": "Umývadlo",      "typ": "objekt",  "z": 3, "prefarbit": true, "povodny": "Pôvodné obdĺžnikové", "povodnyDetail": "Na dosku · podľa vizualizácie ST1", "nahlad": [0.40, 0.56, 0.62, 0.71], "roi": [0.40, 0.55, 0.61, 0.70] },
