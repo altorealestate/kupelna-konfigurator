@@ -22,6 +22,7 @@ Vizualizácie kúpeľní (výmena obkladu, batérií, umývadiel…) cez kie.ai 
 - `& .\demo\zostav.ps1` (bez kreditov) z výsledkov vyrobí `demo\img\` (podklady, PNG vrstvy, náhľady) a vloží dáta do `index.html` medzi `/*DATA*/ … /*/DATA*/`. `-Ladenie <priečinok>` uloží masky a testovacie kombinácie.
 - Kombinácie sa skladajú z vrstiev: GPT 2.5 drží scénu takmer na pixel, takže stačí 1 generácia na produkt. Batérie a umývadlo (`prefarbit`) majú vrstvu pre každý obklad, aby okolo nich nebola svetlá aura z pôvodnej steny.
 - `index.html` funguje otvorený priamo zo súboru (bez servera).
+- GitHub: verejný repo `altorealestate/kupelna-konfigurator`, GitHub Pages z `main` (koreňový `index.html` presmeruje na `demo/`): https://altorealestate.github.io/kupelna-konfigurator/ – všetko commitnuté je verejné. Katalóg, `Podkladove-obrazky` a `vystupy` sú v `.gitignore`.
 
 ## Dôležité
 
