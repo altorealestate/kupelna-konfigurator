@@ -274,6 +274,40 @@ public static class Mapa
         for (int i = 0; i < m.Length; i++) if (!keep[i]) m[i] = 0;
     }
 
+    // Clears the column [cx0, cx1) of mask a above the top edge of the object, so an object
+    // standing behind it (a tap behind a washbasin) comes from the layer underneath.
+    // The edge is the first run of `run` rows, between yFrom and yTo, in which most pixels of
+    // a side strip (width `side`, left or right of the column) belong to the object in `own`.
+    // Returns the edge row, or -1 (mask unchanged) when no edge is found.
+    public static int OrezStlpec(float[] a, float[] own, int w, int h, double cx0, double cx1,
+                                 double side, double yFrom, double yTo, int run)
+    {
+        int x0 = (int)(cx0 * w), x1 = (int)(cx1 * w), s = Math.Max(1, (int)(side * w));
+        int ya = (int)(yFrom * h), yb = Math.Min(h, (int)(yTo * h));
+        int rim = -1;
+        int[][] strips = { new int[] { Math.Max(0, x0 - s), x0 }, new int[] { x1, Math.Min(w, x1 + s) } };
+        foreach (var st in strips)
+        {
+            int streak = 0;
+            for (int y = ya; y < yb; y++)
+            {
+                int hit = 0;
+                for (int x = st[0]; x < st[1]; x++) if (own[y * w + x] > 0.5f) hit++;
+                streak = hit * 2 >= (st[1] - st[0]) ? streak + 1 : 0;
+                if (streak == run)
+                {
+                    int top = y - run + 1;
+                    if (rim < 0 || top < rim) rim = top;
+                    break;
+                }
+            }
+        }
+        if (rim < 0) return -1;
+        for (int y = 0; y < rim; y++)
+            for (int x = x0; x < x1; x++) a[y * w + x] = 0;
+        return rim;
+    }
+
     public static float[] Doplnok(float[] a)
     {
         var o = new float[a.Length];

@@ -48,9 +48,9 @@ $params = @{
     objekt = @{ t0 = 14; t1 = 34; close = 4; open = 1; grow = 1; blur = 1 }
 }
 
-function Get-Mask($img, $kat) {
+function Get-Mask($img, $kat, $refBlur = $baseBlur) {
     $p = $params[$kat.typ]
-    $a = [Mapa]::Prah([Obr]::Rozdiel($img.Rozmaz(2), $baseBlur), $p.t0, $p.t1)
+    $a = [Mapa]::Prah([Obr]::Rozdiel($img.Rozmaz(2), $refBlur), $p.t0, $p.t1)
     $roi = [double[]]$kat.roi
     [Mapa]::Oblast($a, $W, $H, $roi)
     $a = [Mapa]::Zuz([Mapa]::Rozsir($a, $W, $H, $p.close), $W, $H, $p.close)
@@ -58,6 +58,16 @@ function Get-Mask($img, $kat) {
     $a = [Mapa]::Rozmaz([Mapa]::Rozsir($a, $W, $H, $p.grow), $W, $H, $p.blur)
     [Mapa]::Oblast($a, $W, $H, $roi)
     , $a
+}
+
+# Category option "stlpec": [x0, x1] = a column (the tap) that stands behind the object;
+# above the object's top edge the column is cleared so the tap comes from its own layer.
+function Set-ColumnCut($alfa, $own, $kat, [string]$name) {
+    if (-not $kat.stlpec) { return }
+    $c = [double[]]$kat.stlpec
+    $rim = [Mapa]::OrezStlpec($alfa, $own, $W, $H, $c[0], $c[1], 0.015, $kat.roi[1], 0.66, 4)
+    if ($rim -lt 0) { Write-Warning "${name}: top edge not found, column not cleared" }
+    else { Write-Host "    ${name}: column cleared above y=$rim ($([Math]::Round($rim / $H, 3)))" }
 }
 
 # Saves one cropped PNG per ROI rectangle (keeps files small when the ROI is scattered).
@@ -86,19 +96,51 @@ function Get-Result($v) {
 # is left out when estimating the wall colour, so the objects do not tint the estimate.
 $loaded = @{}   # variant id -> @{ img; alfa; kat }
 $objects = New-Object 'float[]' ($W * $H)
+$footprint = @{}   # category id -> union of its variants' masks (old and new object positions)
 foreach ($kat in @($cfg.kategorie | Where-Object { $_.prefarbit })) {
+    $ids = @()
     foreach ($v in @($cfg.varianty | Where-Object { $_.kategoria -eq $kat.id })) {
         $img = Get-Result $v
         if (-not $img) { continue }
         $alfa = Get-Mask $img $kat
         $loaded[$v.id] = @{ img = $img; alfa = $alfa; kat = $kat }
         $objects = [Mapa]::Max($objects, $alfa)
+        if ($footprint[$kat.id]) { $footprint[$kat.id] = [Mapa]::Max($footprint[$kat.id], $alfa) } else { $footprint[$kat.id] = $alfa }
+        $ids += $v.id
+    }
+    # On the light base walls the old chrome objects stand out clearly; on dark tiles they
+    # barely differ from the wall. Every layer of the category therefore always covers the
+    # whole footprint, so no remains of the original objects show through.
+    $footprint[$kat.id] = [Mapa]::Rozsir($footprint[$kat.id], $W, $H, 2)
+    foreach ($id in $ids) {
+        $own = $loaded[$id].alfa
+        $loaded[$id].alfa = [Mapa]::Max($own, $footprint[$kat.id])
+        Set-ColumnCut $loaded[$id].alfa $own $kat $id
     }
 }
 $wallWeight = [Mapa]::Doplnok([Mapa]::Rozsir($objects, $W, $H, 4))
 $baseLow = $base.RozmazVazene($wallWeight, $LowRadius)
 
-$plates = @([ordered]@{ id = 'povodny'; img = $base; low = $baseLow })
+$plates = @([ordered]@{ id = 'povodny'; img = $base; low = $baseLow; blur = $baseBlur })
+
+# A variant generated directly on a wall-cladding result ("<variant>@<obklad>" in
+# vysledky.json); its mask is taken against that background, so no recolouring is needed.
+$plateVariants = @{}
+function Get-PlateVariant($v, $pl, $kat) {
+    $key = "$($v.id)@$($pl.id)"
+    if ($pl.id -eq 'povodny' -or -not $res.$key) { return $null }
+    if (-not $plateVariants.ContainsKey($key)) {
+        $img = [Obr]::Nacitaj((Join-Path $root $res.$key.subor), $W, $H, 0)
+        # Arrays are assigned directly, never through `$x = if ...`: that would unroll the
+        # float[] into object[] and C# would then modify a temporary copy.
+        $own = Get-Mask $img $kat $pl.blur
+        $alfa = $own
+        if ($footprint[$kat.id]) { $alfa = [Mapa]::Max($own, $footprint[$kat.id]) }
+        Set-ColumnCut $alfa $own $kat $key
+        $plateVariants[$key] = @{ img = $img; alfa = $alfa }
+    }
+    $plateVariants[$key]
+}
 $kategorie = @()
 $testy = @()
 foreach ($kat in $cfg.kategorie) {
@@ -128,13 +170,19 @@ foreach ($kat in $cfg.kategorie) {
         $opt = [ordered]@{ id = $v.id; nazov = $v.nazov; kratko = $v.kratko; detail = $v.detail; nahlad = $refs[0] }
         if ($kat.typ -eq 'podklad') {
             $opt.obrazok = "img/$($v.id).jpg"
-            $plates += [ordered]@{ id = $v.id; img = $img; low = $img.RozmazVazene($wallWeight, $LowRadius) }
+            $plates += [ordered]@{ id = $v.id; img = $img; low = $img.RozmazVazene($wallWeight, $LowRadius); blur = $img.Rozmaz(2) }
         } else {
-            $alfa = if ($loaded.ContainsKey($v.id)) { $loaded[$v.id].alfa } else { Get-Mask $img $kat }
+            if ($loaded.ContainsKey($v.id)) { $alfa = $loaded[$v.id].alfa } else { $alfa = Get-Mask $img $kat }
             $roi = [double[]]$kat.roi
             $vrstvy = [ordered]@{}
             if ($kat.prefarbit) {
                 foreach ($pl in $plates) {
+                    $own = Get-PlateVariant $v $pl $kat
+                    if ($own) {
+                        $vrstvy[$pl.id] = Save-Pieces $own.img $own.alfa "$($v.id)--$($pl.id)" $roi
+                        continue
+                    }
+                    if ($pl.id -ne 'povodny') { Write-Warning "$($v.id) has no result on $($pl.id), using recoloured layer" }
                     $layer = if ($pl.id -eq 'povodny') { $img } else { [Obr]::Prefarbi($img, $baseLow, $pl.low, 25, 55) }
                     $vrstvy[$pl.id] = Save-Pieces $layer $alfa "$($v.id)--$($pl.id)" $roi
                 }
@@ -143,7 +191,7 @@ foreach ($kat in $cfg.kategorie) {
             }
             $opt.vrstvy = $vrstvy
             $loaded[$v.id] = @{ img = $img; alfa = $alfa; kat = $kat }
-            $union = if ($union) { [Mapa]::Max($union, $alfa) } else { $alfa }
+            if ($union) { $union = [Mapa]::Max($union, $alfa) } else { $union = $alfa }
             if ($Ladenie) { [Obr]::ZMasky($alfa, $W, $H).UlozJpg((Join-Path $Ladenie "maska-$($v.id).jpg"), 80) }
         }
         $moznosti += $opt
@@ -199,6 +247,8 @@ if ($Ladenie) {
         if (-not ($combo | Where-Object { $_ -like 'dlazba-*' })) { $ids += 'dlazba-povodny' }
         foreach ($id in $ids | Sort-Object { $loaded[$_].kat.z }) {
             $l = $loaded[$id]
+            $own = if ($l.kat.prefarbit) { Get-PlateVariant @{ id = $id } $plate $l.kat } else { $null }
+            if ($own) { $comp.Prekry($own.img, $own.alfa); continue }
             $layer = if ($l.kat.prefarbit -and $plate.id -ne 'povodny') { [Obr]::Prefarbi($l.img, $baseLow, $plate.low, 25, 55) } else { $l.img }
             $comp.Prekry($layer, $l.alfa)
         }

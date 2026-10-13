@@ -7,8 +7,8 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 ## Ako to funguje
 
 - Každý produkt z katalógu sa do pôvodnej vizualizácie (štandard ST1) vložil jednou generáciou cez [kie.ai](https://kie.ai), model `gpt-image-2-5-flare-image-to-image` v rozlíšení 1K. Jedna generácia stojí 6 kreditov (≈ $0,03) a trvá asi 75 s.
-- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 10 generácií je tak 216 kombinácií.
-- Batérie a umývadlo majú vrstvu pre každý obklad zvlášť, aby okolo nich na tmavom obklade nebola svetlá aura z pôvodnej steny.
+- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 22 generácií je tak 216 kombinácií.
+- Batérie a umývadlo sú vygenerované priamo na každom obklade, takže okolo nich nie sú svetlé škvrny ani zvyšky pôvodných batérií.
 - Ide o orientačný náhľad. Finálnu vizualizáciu zostavy, ktorú si klient vyberie, je lepšie vygenerovať naraz.
 
 ## Štruktúra
@@ -26,7 +26,7 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 ## Pridanie produktu
 
 1. Do `demo/varianty.json` pridať variant: kategóriu, názov, cestu k fotke produktu a prompt.
-2. `& .\demo\generuj.ps1` vygeneruje variant (6 kreditov).
+2. `& .\demo\generuj.ps1` vygeneruje variant (6 kreditov za obrázok; batérie a umývadlá sa generujú aj na každom obklade, teda 4 obrázky).
 3. `& .\demo\zostav.ps1` prepočíta vrstvy a dáta v `demo/index.html`.
 4. Commit a push. GitHub Pages sa aktualizuje do minúty.
 

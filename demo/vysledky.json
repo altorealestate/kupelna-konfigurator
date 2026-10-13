@@ -1,9 +1,4 @@
 {
-    "baterie-black":  {
-                          "subor":  "vystupy\\20261013-114727_2e1fcec7_1.png",
-                          "taskId":  "2e1fcec7dd7aefe928b37111903de4d2",
-                          "sekund":  72
-                      },
     "obklad-calacatta":  {
                              "subor":  "vystupy\\20261013-115144_43174af8_1.png",
                              "taskId":  "43174af829672be790b329435609fc13",
@@ -29,24 +24,89 @@
                          "taskId":  "60b8a36ba5ffb3a780ddf96a55639062",
                          "sekund":  55.3
                      },
-    "baterie-bronze":  {
-                           "subor":  "vystupy\\20261013-115203_93fcbb6b_1.png",
-                           "taskId":  "93fcbb6b20d67b12451a0e60e991711d",
-                           "sekund":  76.4
-                       },
-    "umyvadlo-savoy":  {
-                           "subor":  "vystupy\\20261013-115134_e905c095_1.png",
-                           "taskId":  "e905c0956a720b279f2324532cd48b96",
-                           "sekund":  49.7
-                       },
-    "umyvadlo-okruhle":  {
-                             "subor":  "vystupy\\20261013-115231_300ce6aa_1.png",
-                             "taskId":  "300ce6aa44b5cd854c182249721b1189",
-                             "sekund":  107.5
-                         },
     "zlab-grafit":  {
                         "subor":  "vystupy\\20261013-115154_07ae94a6_1.png",
                         "taskId":  "07ae94a63b75736ed507fea25cfc7eae",
                         "sekund":  71
-                    }
+                    },
+    "baterie-bronze@obklad-graphit":  {
+                                          "subor":  "vystupy\\20261013-141642_68b46de3_1.png",
+                                          "taskId":  "68b46de330f8aad66f539b9dcb11eb82",
+                                          "sekund":  79.3
+                                      },
+    "baterie-black":  {
+                          "subor":  "vystupy\\20261013-141905_5157e249_1.png",
+                          "taskId":  "5157e249bebbd10dbfb37e8d60f86bf5",
+                          "sekund":  90.6
+                      },
+    "baterie-black@obklad-calacatta":  {
+                                           "subor":  "vystupy\\20261013-141904_6c501795_1.png",
+                                           "taskId":  "6c5017951f0052515c2e5885b2161fc7",
+                                           "sekund":  87.1
+                                       },
+    "baterie-black@obklad-graphit":  {
+                                         "subor":  "vystupy\\20261013-141916_a5cdaec8_1.png",
+                                         "taskId":  "a5cdaec80ea4dd1ed611a474a4b15f7f",
+                                         "sekund":  103.8
+                                     },
+    "baterie-black@obklad-travertine":  {
+                                            "subor":  "vystupy\\20261013-141934_6a4186df_1.png",
+                                            "taskId":  "6a4186dfbd9de19d936351e066ea4a26",
+                                            "sekund":  101.4
+                                        },
+    "baterie-bronze":  {
+                           "subor":  "vystupy\\20261013-141920_3fcb7330_1.png",
+                           "taskId":  "3fcb7330196cfbfae838507bd5af76ef",
+                           "sekund":  64.6
+                       },
+    "baterie-bronze@obklad-calacatta":  {
+                                            "subor":  "vystupy\\20261013-141949_eee7d178_1.png",
+                                            "taskId":  "eee7d178d79c70b1e28e15ac287f899f",
+                                            "sekund":  87.1
+                                        },
+    "baterie-bronze@obklad-travertine":  {
+                                             "subor":  "vystupy\\20261013-141943_38aafc78_1.png",
+                                             "taskId":  "38aafc78c7d1d6b50341b6582b518efc",
+                                             "sekund":  81.5
+                                         },
+    "umyvadlo-savoy":  {
+                           "subor":  "vystupy\\20261013-141930_26026e53_1.png",
+                           "taskId":  "26026e53deb1c6360502899b035942ae",
+                           "sekund":  68.7
+                       },
+    "umyvadlo-savoy@obklad-calacatta":  {
+                                            "subor":  "vystupy\\20261013-141932_a1a9ad23_1.png",
+                                            "taskId":  "a1a9ad23e089ee8cacdafd3afc1b2948",
+                                            "sekund":  72.6
+                                        },
+    "umyvadlo-savoy@obklad-graphit":  {
+                                          "subor":  "vystupy\\20261013-141858_f4c2bdfe_1.png",
+                                          "taskId":  "f4c2bdfeda6430627915fd6090e3268b",
+                                          "sekund":  40.5
+                                      },
+    "umyvadlo-savoy@obklad-travertine":  {
+                                             "subor":  "vystupy\\20261013-141945_fc7c6ccf_1.png",
+                                             "taskId":  "fc7c6ccfbf8bbf159064a145e63f70fc",
+                                             "sekund":  86.1
+                                         },
+    "umyvadlo-okruhle":  {
+                             "subor":  "vystupy\\20261013-141934_1be6f051_1.png",
+                             "taskId":  "1be6f05119fe971213ceb81b5e68c24c",
+                             "sekund":  76.4
+                         },
+    "umyvadlo-okruhle@obklad-calacatta":  {
+                                              "subor":  "vystupy\\20261013-141853_49aaaede_1.png",
+                                              "taskId":  "49aaaede26cac72f532d615b40d8074e",
+                                              "sekund":  35.7
+                                          },
+    "umyvadlo-okruhle@obklad-graphit":  {
+                                            "subor":  "vystupy\\20261013-141934_8db26afa_1.png",
+                                            "taskId":  "8db26afa79810c3caeef0714b5c05154",
+                                            "sekund":  75.9
+                                        },
+    "umyvadlo-okruhle@obklad-travertine":  {
+                                               "subor":  "vystupy\\20261013-141924_538f462d_1.png",
+                                               "taskId":  "538f462d8f35f0699896d7b925bf8a91",
+                                               "sekund":  64
+                                           }
 }
