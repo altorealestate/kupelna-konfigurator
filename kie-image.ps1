@@ -184,13 +184,30 @@ if ($PSCmdlet.ParameterSetName -eq 'Create') {
         }
     }
 
-    $taskInput = [ordered]@{
-        prompt       = $Prompt
-        aspect_ratio = $AspectRatio
-        resolution   = $Resolution
-        background   = $Background
+    # Each model family names its inputs differently.
+    if ($Model -like 'nano-banana*') {
+        $taskInput = [ordered]@{
+            prompt        = $Prompt
+            aspect_ratio  = $AspectRatio
+            resolution    = $Resolution
+            output_format = 'png'
+        }
+        if ($inputUrls.Count -gt 0) { $taskInput.image_input = [string[]]$inputUrls }
+    } elseif ($Model -like 'grok-imagine*') {
+        # No resolution setting; only a few aspect ratios, otherwise keep the input's.
+        $ratio = $AspectRatio
+        if (@('1:1', '2:3', '3:2', '16:9', '9:16') -notcontains $ratio) { $ratio = 'auto' }
+        $taskInput = [ordered]@{ prompt = $Prompt; aspect_ratio = $ratio }
+        if ($inputUrls.Count -gt 0) { $taskInput.image_urls = [string[]]$inputUrls }
+    } else {
+        $taskInput = [ordered]@{
+            prompt       = $Prompt
+            aspect_ratio = $AspectRatio
+            resolution   = $Resolution
+            background   = $Background
+        }
+        if ($inputUrls.Count -gt 0) { $taskInput.input_urls = [string[]]$inputUrls }
     }
-    if ($inputUrls.Count -gt 0) { $taskInput.input_urls = [string[]]$inputUrls }
     $body = [ordered]@{ model = $Model; input = $taskInput } | ConvertTo-Json -Depth 10
     $content = New-Object System.Net.Http.StringContent($body, [Text.Encoding]::UTF8, 'application/json')
 

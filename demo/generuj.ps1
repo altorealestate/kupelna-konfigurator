@@ -1,17 +1,23 @@
 <#
 .SYNOPSIS
-  Generates the variants from varianty.json via ..\kie-image.ps1 (in parallel)
-  and records the resulting images in vysledky.json.
+  Generates the variants from varianty.json via ..\kie-image.ps1 (in parallel, in stages
+  ordered by dependency) and records the results in vysledky.json, each with its alignment
+  to the base frame (at 4K the model re-frames the scene slightly).
 
-  Variants of a category with "naObkladoch": true are also generated on top of every
-  wall-cladding result (task id "<variant>@<obklad variant>"), so the object sits on the
-  right tiles and its layer has no halo from the original wall.
+  - helper images ("pomocne") and plain variants are generated from the base photo,
+  - a variant with "zVariantu" is generated from another variant's result (bronze taps are
+    recoloured black ones, so both have the same shape, size and position),
+  - for categories with "naObkladoch" the object of each variant is cut out (difference
+    against the category's helper image without objects, "prazdny", or a copy in which the
+    model painted the object pure green, "<variant>#kluc"), pasted onto every wall-cladding
+    result, and the model only cleans up around it ("<variant>@<obklad>"). The object
+    therefore keeps its size and position on every cladding.
 
 .EXAMPLE
-  & .\demo\generuj.ps1                                   # everything that has no result yet
-  & .\demo\generuj.ps1 -Ids baterie-bronze@obklad-graphit  # one task
-  & .\demo\generuj.ps1 -Ids baterie-black                # a variant and all its per-tile tasks
-  & .\demo\generuj.ps1 -Ids baterie-black -Force         # regenerate even if results exist
+  & .\demo\generuj.ps1                                    # everything that has no result yet
+  & .\demo\generuj.ps1 -Ids baterie-black@obklad-graphit  # one task
+  & .\demo\generuj.ps1 -Ids baterie-black*                # a variant and all its per-tile tasks (wildcards)
+  & .\demo\generuj.ps1 -Ids baterie-black* -Force         # regenerate even if results exist
 #>
 param(
     [string[]]$Ids,
@@ -19,66 +25,135 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$root = Split-Path $PSScriptRoot -Parent
+. (Join-Path $PSScriptRoot 'spolocne.ps1')
 $kie = Join-Path $root 'kie-image.ps1'
-$resultsPath = Join-Path $PSScriptRoot 'vysledky.json'
-
-$cfg = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'varianty.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-$results = [ordered]@{}
-if (Test-Path -LiteralPath $resultsPath) {
-    $old = Get-Content -LiteralPath $resultsPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    foreach ($p in $old.PSObject.Properties) { $results[$p.Name] = $p.Value }
-}
+$inputDir = 'vystupy\vstupy'
+New-Item -ItemType Directory -Force -Path (Join-Path $root $inputDir) | Out-Null
+$results = Read-Results
 
 $plateCat = $cfg.kategorie | Where-Object { $_.typ -eq 'podklad' } | Select-Object -First 1
 $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id })
 
-$tasks = foreach ($v in $cfg.varianty) {
-    [pscustomobject]@{ id = $v.id; v = $v; podklad = Join-Path $root $cfg.podklad }
-    $kat = $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria }
-    if (-not $kat.naObkladoch) { continue }
-    foreach ($o in $plates) {
-        $id = "$($v.id)@$($o.id)"
-        if (-not $results.Contains($o.id)) {
-            Write-Warning "$id skipped: $($o.id) has no result yet (generate it first)."
-            continue
-        }
-        [pscustomobject]@{ id = $id; v = $v; podklad = Join-Path $root $results[$o.id].subor }
-    }
-}
-
-$todo = @($tasks | Where-Object {
-    (-not $Ids -or $Ids -contains $_.id -or $Ids -contains $_.v.id) -and ($Force -or -not $results.Contains($_.id))
+$tasks = @(foreach ($p in @($cfg.pomocne)) {
+    [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = @(); deps = @(); typ = 'podklad' }
 })
-if ($todo.Count -eq 0) { Write-Host 'Nothing to generate.'; return }
-
-$jobs = foreach ($t in $todo) {
-    $images = @($t.podklad) + @($t.v.referencie | ForEach-Object { Join-Path $root $_ })
-    Write-Host "Starting $($t.id) ($($images.Count - 1) reference image(s))"
-    Start-Job -Name $t.id -ArgumentList $kie, $t.v.prompt, $images, $cfg.aspectRatio, $cfg.resolution -ScriptBlock {
-        param($kie, $prompt, $images, $ratio, $res)
-        Set-ExecutionPolicy -Scope Process Bypass -Force
-        & $kie -Prompt $prompt -Images $images -AspectRatio $ratio -Resolution $res
+foreach ($v in $cfg.varianty) {
+    $kat = $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria }
+    $refs = @($v.referencie | ForEach-Object { Join-Path $root $_ })
+    if ($v.zVariantu) {
+        $tasks += [pscustomobject]@{ id = $v.id; prompt = $v.prompt; refs = $refs; deps = @($v.zVariantu); typ = 'zVariantu'; zdroj = $v.zVariantu; kat = $kat }
+    } else {
+        $tasks += [pscustomobject]@{ id = $v.id; prompt = $v.prompt; refs = $refs; deps = @(); typ = 'podklad' }
     }
-}
-
-$jobs | Wait-Job | Out-Null
-foreach ($job in $jobs) {
-    try {
-        $out = @(Receive-Job $job -ErrorAction Stop | Where-Object { $_ -is [string] -and (Test-Path -LiteralPath $_) })
-        if ($out.Count -eq 0) { throw 'no image downloaded' }
-        $file = $out[0]
-        $meta = Get-Content -LiteralPath ($file -replace '_\d+\.\w+$', '.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-        $results[$job.Name] = [ordered]@{
-            subor  = $file.Substring($root.Length + 1)
-            taskId = $meta.taskId
-            sekund = $meta.durationSec
+    if (-not $kat.naObkladoch) { continue }
+    if ($kat.promptKluc) {
+        $tasks += [pscustomobject]@{
+            id = "$($v.id)#kluc"; prompt = $kat.promptKluc.Replace('{popis}', $v.popis); refs = @()
+            deps = @($v.id); typ = 'zVariantu'; zdroj = $v.id; kat = $kat
         }
-        Write-Host "OK   $($job.Name): $file"
-    } catch {
-        Write-Warning "FAIL $($job.Name): $($_.Exception.Message)"
     }
-    Remove-Job $job
+    foreach ($o in $plates) {
+        $tasks += [pscustomobject]@{
+            id = "$($v.id)@$($o.id)"; prompt = $kat.promptNaObklad.Replace('{popis}', $v.popis); refs = @()
+            deps = @($v.id, $o.id) + @(Get-ObjectDeps $v $kat); typ = 'naObklad'; v = $v; o = $o; kat = $kat
+        }
+    }
 }
 
-[IO.File]::WriteAllText($resultsPath, ($results | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
+$waiting = New-Object System.Collections.ArrayList
+foreach ($t in $tasks) {
+    $id = $t.id
+    $match = -not $Ids -or @($Ids | Where-Object { $id -like $_ }).Count -gt 0
+    if ($match -and ($Force -or -not $results.Contains($t.id))) { [void]$waiting.Add($t) }
+}
+if ($waiting.Count -eq 0) { Write-Host 'Nothing to generate.'; return }
+
+# Prepares the input image of a task (in the base frame); returns its path relative to $root.
+function New-TaskInput($t) {
+    switch ($t.typ) {
+        'podklad' { return $cfg.podklad }
+        'zVariantu' { $img = Get-Aligned $results $t.zdroj $t.kat }
+        'naObklad' {
+            $img = Get-Aligned $results $t.o.id
+            $obj = Get-Aligned $results $t.v.id $t.kat
+            $mask = Get-NewObject $results $t.v $t.kat $obj
+            # The object's edge pixels carry the original background (a light halo on dark tiles,
+            # which the model then keeps around bronze); they are moved to this cladding's
+            # background. With a helper image without objects the background is known per pixel,
+            # otherwise it is estimated from the surroundings.
+            if ($t.kat.prazdny) {
+                # Roughly erase the original objects with the surrounding wall colour, so the
+                # model repaints the tiles there instead of keeping faint ghosts of them.
+                $old = Get-OldObjects $results $t.kat
+                $img.Prekry($img.RozmazVazene([Mapa]::Doplnok($old), (Get-Px 20)), $old)
+                $bgBase = (Get-Aligned $results $t.kat.prazdny $t.kat).Rozmaz((Get-Px 1))
+                $bgPlate = $img.Rozmaz((Get-Px 1))
+            } else {
+                $base = Get-Input $cfg.podklad
+                $old = Get-Mask $obj $t.kat $base.Rozmaz((Get-Px 2))
+                # Erase the whole old object (thin leftovers next to a new washbasin are kept by
+                # the model as part of the design): the wall is filled smoothly from around it,
+                # the shelf ("polica") is the same on every cladding and comes from the variant.
+                $hole = Get-OldObjects $results $t.kat
+                $img.Prekry([Obr]::Vyrovnanie($img, (New-Object Obr $W, $H), $hole, (Get-Px 6), 3000, 1000), $hole)
+                if ($t.kat.polica) { $img.Prekry($obj, [Mapa]::Min($hole, [Mapa]::Riadky($W, $H, [double]$t.kat.polica, (Get-Px 2)))) }
+                $keep = [Mapa]::Doplnok([Mapa]::Rozsir([Mapa]::Max($old, $mask), $W, $H, (Get-Px 6)))
+                $bgBase = $base.RozmazVazene($keep, (Get-Px 10))
+                $bgPlate = $img.RozmazVazene($keep, (Get-Px 10))
+            }
+            $obj = [Obr]::Prefarbi($obj, $bgBase, $bgPlate, 25, 55)
+            $img.Prekry($obj, $mask)
+        }
+    }
+    $rel = Join-Path $inputDir "$($t.id).jpg"
+    $img.UlozJpg((Join-Path $root $rel), 95)
+    $rel
+}
+
+while ($waiting.Count -gt 0) {
+    $pending = @($waiting | ForEach-Object { $_.id })
+    $ready = @($waiting | Where-Object {
+        @($_.deps | Where-Object { -not $results.Contains($_) -or $pending -contains $_ }).Count -eq 0
+    })
+    if ($ready.Count -eq 0) {
+        Write-Warning "Cannot generate, inputs are missing: $($pending -join ', ')"
+        break
+    }
+
+    $jobs = foreach ($t in $ready) {
+        $in = New-TaskInput $t
+        $images = @((Join-Path $root $in)) + $t.refs
+        Write-Host "Starting $($t.id) ($($images.Count - 1) reference image(s))"
+        $job = Start-Job -Name $t.id -ArgumentList $kie, $t.prompt, $images, $cfg.aspectRatio, $cfg.resolution -ScriptBlock {
+            param($kie, $prompt, $images, $ratio, $res)
+            Set-ExecutionPolicy -Scope Process Bypass -Force
+            & $kie -Prompt $prompt -Images $images -AspectRatio $ratio -Resolution $res -TimeoutSec 900
+        }
+        $job | Add-Member -NotePropertyName Vstup -NotePropertyValue $in -PassThru
+    }
+
+    $jobs | Wait-Job | Out-Null
+    foreach ($job in $jobs) {
+        try {
+            $out = @(Receive-Job $job -ErrorAction Stop | Where-Object { $_ -is [string] -and (Test-Path -LiteralPath $_) })
+            if ($out.Count -eq 0) { throw 'no image downloaded' }
+            $file = $out[0]
+            $meta = Get-Content -LiteralPath ($file -replace '_\d+\.\w+$', '.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+            $al = [Zarovnanie]::Najdi((Get-Input $job.Vstup), $file)
+            $results[$job.Name] = [ordered]@{
+                subor      = $file.Substring($root.Length + 1)
+                taskId     = $meta.taskId
+                sekund     = $meta.durationSec
+                vstup      = $job.Vstup
+                zarovnanie = @([Math]::Round($al[0], 5), [Math]::Round($al[1], 5), [Math]::Round($al[2], 2), [Math]::Round($al[3], 2))
+                zhoda      = [Math]::Round($al[4], 3)
+            }
+            Write-Host ("OK   {0}: {1}  (scale {2:N4} x {3:N4}, shift {4:N1}, {5:N1} px, match {6:N2})" -f $job.Name, $file, $al[0], $al[1], $al[2], $al[3], $al[4])
+        } catch {
+            Write-Warning "FAIL $($job.Name): $($_.Exception.Message)"
+        }
+        Remove-Job $job
+    }
+    Save-Results $results
+    foreach ($t in $ready) { $waiting.Remove($t) }
+}
