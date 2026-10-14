@@ -77,19 +77,19 @@
                                         ],
                          "zhoda":  0.869
                      },
-    "baterie-black":  {
-                          "subor":  "vystupy\\20261013-164325_ea076c1f_1.png",
-                          "taskId":  "ea076c1f74aaaf66dcc17bc789c9237a",
-                          "sekund":  88.8,
-                          "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
-                          "zarovnanie":  [
-                                             0.99675,
-                                             0.99363,
-                                             1.88,
-                                             -7.25
-                                         ],
-                          "zhoda":  0.732
-                      },
+    "baterie-black-zaklad":  {
+                                 "subor":  "vystupy\\20261013-164325_ea076c1f_1.png",
+                                 "taskId":  "ea076c1f74aaaf66dcc17bc789c9237a",
+                                 "sekund":  88.8,
+                                 "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
+                                 "zarovnanie":  [
+                                                    0.99675,
+                                                    0.99363,
+                                                    1.88,
+                                                    -7.25
+                                                ],
+                                 "zhoda":  0.732
+                             },
     "umyvadlo-savoy":  {
                            "subor":  "vystupy\\20261013-164307_33a349cb_1.png",
                            "taskId":  "33a349cbb7b13bafd185d32e30e2e77a",
@@ -130,30 +130,30 @@
                         "zhoda":  0.645
                     },
     "baterie-black@obklad-graphit":  {
-                                         "subor":  "vystupy\\20261013-200639_3fa5c5b9_1.png",
-                                         "taskId":  "3fa5c5b9b62c04316a90c9f6bf14bf47",
-                                         "sekund":  65.8,
+                                         "subor":  "vystupy\\20261014-093240_45e77fac_1.png",
+                                         "taskId":  "45e77fac1d3ebe586575026c00d4594a",
+                                         "sekund":  46.7,
                                          "vstup":  "vystupy\\vstupy\\baterie-black@obklad-graphit.jpg",
                                          "zarovnanie":  [
-                                                            0.998,
-                                                            0.99938,
-                                                            1.5,
-                                                            -2
+                                                            0.99912,
+                                                            0.99969,
+                                                            1.88,
+                                                            -1.5
                                                         ],
-                                         "zhoda":  0.856
+                                         "zhoda":  0.866
                                      },
     "baterie-bronze":  {
-                           "subor":  "vystupy\\20261013-165238_624bdb39_1.png",
-                           "taskId":  "624bdb3917fb78ab85da3adc7359c7bb",
-                           "sekund":  81.4,
+                           "subor":  "vystupy\\20261014-093347_bef762b9_1.png",
+                           "taskId":  "bef762b9ca80efde0a1d9b05dce3e4e7",
+                           "sekund":  90.1,
                            "vstup":  "vystupy\\vstupy\\baterie-bronze.jpg",
                            "zarovnanie":  [
-                                              0.997,
-                                              1.00019,
-                                              2.38,
-                                              -2.62
+                                              0.99694,
+                                              1.00006,
+                                              1.88,
+                                              -2.5
                                           ],
-                           "zhoda":  0.834
+                           "zhoda":  0.854
                        },
     "umyvadlo-savoy#kluc":  {
                                 "subor":  "vystupy\\20261013-165211_92e60cef_1.png",
@@ -195,69 +195,69 @@
                                             "zhoda":  0.824
                                         },
     "baterie-black@obklad-calacatta":  {
-                                           "subor":  "vystupy\\20261013-170220_439478a0_1.png",
-                                           "taskId":  "439478a0b210461131e918666d6b7b1d",
-                                           "sekund":  71.6,
+                                           "subor":  "vystupy\\20261014-093244_78c5ac4a_1.png",
+                                           "taskId":  "78c5ac4a5f684af8106359f3a5e7934c",
+                                           "sekund":  52.9,
                                            "vstup":  "vystupy\\vstupy\\baterie-black@obklad-calacatta.jpg",
                                            "zarovnanie":  [
-                                                              0.99794,
-                                                              0.99888,
-                                                              1.62,
+                                                              0.99744,
+                                                              0.99812,
+                                                              1.38,
                                                               -1.25
                                                           ],
-                                           "zhoda":  0.817
+                                           "zhoda":  0.802
                                        },
     "baterie-black@obklad-travertine":  {
-                                            "subor":  "vystupy\\20261013-170214_83cbb6b7_1.png",
-                                            "taskId":  "83cbb6b700c67a1705fe5edcb5a84a6b",
-                                            "sekund":  59.3,
+                                            "subor":  "vystupy\\20261014-093324_33d1db15_1.png",
+                                            "taskId":  "33d1db156087e909acbfa5c0eb44c8a8",
+                                            "sekund":  79.2,
                                             "vstup":  "vystupy\\vstupy\\baterie-black@obklad-travertine.jpg",
                                             "zarovnanie":  [
-                                                               0.99825,
+                                                               0.99806,
                                                                0.99994,
-                                                               1.5,
-                                                               -1.62
+                                                               1.88,
+                                                               -1.5
                                                            ],
-                                            "zhoda":  0.888
+                                            "zhoda":  0.871
                                         },
     "baterie-bronze@obklad-calacatta":  {
-                                            "subor":  "vystupy\\20261013-170210_2d09e98f_1.png",
-                                            "taskId":  "2d09e98f22d0ccab9773a4e941a2121b",
-                                            "sekund":  49.6,
+                                            "subor":  "vystupy\\20261014-093444_812fc9c3_1.png",
+                                            "taskId":  "812fc9c35c9913fea6fa8cf4443b7524",
+                                            "sekund":  35.8,
                                             "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-calacatta.jpg",
                                             "zarovnanie":  [
-                                                               0.99825,
+                                                               0.99806,
                                                                0.99906,
                                                                1.88,
-                                                               -1.62
+                                                               -1.88
                                                            ],
-                                            "zhoda":  0.814
+                                            "zhoda":  0.831
                                         },
     "baterie-bronze@obklad-graphit":  {
-                                          "subor":  "vystupy\\20261013-200651_c9742608_1.png",
-                                          "taskId":  "c9742608639a7999da10d2ee1587e0c7",
-                                          "sekund":  59.9,
+                                          "subor":  "vystupy\\20261014-093520_20f3cefe_1.png",
+                                          "taskId":  "20f3cefee9d86cdeca30962af971a041",
+                                          "sekund":  59.7,
                                           "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-graphit.jpg",
                                           "zarovnanie":  [
-                                                             0.99925,
-                                                             0.99975,
-                                                             2.12,
-                                                             -1.38
+                                                             0.9975,
+                                                             0.9955,
+                                                             1.38,
+                                                             -6.5
                                                          ],
-                                          "zhoda":  0.856
+                                          "zhoda":  0.826
                                       },
     "baterie-bronze@obklad-travertine":  {
-                                             "subor":  "vystupy\\20261013-170217_458fdd09_1.png",
-                                             "taskId":  "458fdd090e986f3c352396eb5ef0ab63",
-                                             "sekund":  46.4,
+                                             "subor":  "vystupy\\20261014-093531_f9954e88_1.png",
+                                             "taskId":  "f9954e88bec61d976491f49fdae088f2",
+                                             "sekund":  67,
                                              "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-travertine.jpg",
                                              "zarovnanie":  [
-                                                                0.999,
-                                                                0.99987,
-                                                                2.25,
-                                                                -1.62
+                                                                0.99819,
+                                                                0.98894,
+                                                                1,
+                                                                -11
                                                             ],
-                                             "zhoda":  0.899
+                                             "zhoda":  0.833
                                          },
     "umyvadlo-savoy@obklad-calacatta":  {
                                             "subor":  "vystupy\\20261014-090828_09a2fc10_1.png",
@@ -336,5 +336,18 @@
                                              -0.88
                                          ],
                           "zhoda":  0.871
+                      },
+    "baterie-black":  {
+                          "subor":  "vystupy\\20261014-093035_5bbf69a5_1.png",
+                          "taskId":  "5bbf69a5d3a7ba79c5e2267dcbdd1d56",
+                          "sekund":  56,
+                          "vstup":  "vystupy\\vstupy\\baterie-black.jpg",
+                          "zarovnanie":  [
+                                             0.99806,
+                                             0.99937,
+                                             2.12,
+                                             -1.75
+                                         ],
+                          "zhoda":  0.887
                       }
 }

@@ -5,8 +5,8 @@
   to the base frame (at 4K the model re-frames the scene slightly).
 
   - helper images ("pomocne") and plain variants are generated from the base photo,
-  - a variant with "zVariantu" is generated from another variant's result (bronze taps are
-    recoloured black ones, so both have the same shape, size and position),
+  - a variant with "zVariantu" is generated from another variant's or helper's result (bronze
+    taps are recoloured black ones, so both have the same shape, size and position),
   - for categories with "naObkladoch" the object of each variant is cut out (difference
     against the category's helper image without objects, "prazdny", or a copy in which the
     model painted the object pure green, "<variant>#kluc"), pasted onto every wall-cladding
@@ -35,7 +35,8 @@ $plateCat = $cfg.kategorie | Where-Object { $_.typ -eq 'podklad' } | Select-Obje
 $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id })
 
 $tasks = @(foreach ($p in @($cfg.pomocne)) {
-    [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = @(); deps = @(); typ = 'podklad' }
+    $refs = @($p.referencie | Where-Object { $_ } | ForEach-Object { Join-Path $root $_ })
+    [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = $refs; deps = @(); typ = 'podklad' }
 })
 foreach ($v in $cfg.varianty) {
     $kat = $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria }
