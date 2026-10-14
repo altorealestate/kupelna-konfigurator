@@ -440,5 +440,19 @@
                                                                  -1.62
                                                              ],
                                               "zhoda":  0.845
-                                          }
+                                          },
+    "zrkadlo@obklad-graphit":  {
+                                   "subor":  "vystupy\\20261014-132259_80e5d7f0_1.png",
+                                   "taskId":  "req_80e5d7f026934648ae55b32e5916e949",
+                                   "sekund":  48.2,
+                                   "vstup":  "vystupy\\vstupy\\zrkadlo@obklad-graphit.jpg",
+                                   "zarovnanie":  [
+                                                      0.99962,
+                                                      0.99925,
+                                                      0.12,
+                                                      -1.12
+                                                  ],
+                                   "zhoda":  0.901,
+                                   "cenaUsd":  0.1535
+                               }
 }

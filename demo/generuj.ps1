@@ -1,14 +1,17 @@
 <#
 .SYNOPSIS
-  Generates the variants from varianty.json via ..\kie-image.ps1 (in parallel, in stages
-  ordered by dependency) and records the results in vysledky.json, each with its alignment
-  to the base frame (at 4K the model re-frames the scene slightly).
+  Generates the variants from varianty.json via ..\openai-image.ps1 (or ..\kie-image.ps1 with
+  "generator": "kie"; in parallel, in stages ordered by dependency) and records the results in
+  vysledky.json, each with its alignment to the base frame (at 4K the model re-frames the
+  scene slightly).
 
   - helper images ("pomocne") and plain variants are generated from the base photo,
   - a variant or helper with "zVariantu" is generated from another variant's or helper's result
     (bronze taps are recoloured black ones, so both have the same shape, size and position),
   - the shelf accessories ("doplnky"), which every cladding generation redraws, are removed
     from each cladding ("prazdne-doplnky@<obklad>"); zostav.ps1 pastes the original ones back,
+  - the reflection in the mirror ("zrkadlo") is repainted with each cladding ("zrkadlo@<obklad>",
+    from the cladding without accessories),
   - for categories with "naObkladoch" the object of each variant is cut out (difference
     against the category's helper image without objects, "prazdny", or a copy in which the
     model painted the object pure green, "<variant>#kluc"), pasted onto every wall-cladding
@@ -20,15 +23,27 @@
   & .\demo\generuj.ps1 -Ids baterie-black@obklad-graphit  # one task
   & .\demo\generuj.ps1 -Ids baterie-black*                # a variant and all its per-tile tasks (wildcards)
   & .\demo\generuj.ps1 -Ids baterie-black* -Force         # regenerate even if results exist
+  & .\demo\generuj.ps1 -Ids obklad-x,*@obklad-x -Plan     # only list the tasks, their order and cost (free)
 #>
 param(
     [string[]]$Ids,
-    [switch]$Force
+    [switch]$Force,
+    [switch]$Plan
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'spolocne.ps1')
-$kie = Join-Path $root 'kie-image.ps1'
+# Image generator ("generator" in varianty.json): OpenAI Images API, or kie.ai (older results).
+$generator = 'openai'
+if ($cfg.generator) { $generator = [string]$cfg.generator }
+$genScript = Join-Path $root (@{ openai = 'openai-image.ps1'; kie = 'kie-image.ps1' }[$generator])
+$genArgs = @{ AspectRatio = $cfg.aspectRatio; Resolution = $cfg.resolution; TimeoutSec = 900 }
+if ($generator -eq 'openai') {
+    # Synchronous API: a request cut off on our side is billed anyway.
+    $genArgs.TimeoutSec = 1800
+    if ($cfg.model) { $genArgs.Model = $cfg.model }
+    if ($cfg.kvalita) { $genArgs.Quality = $cfg.kvalita }
+}
 $inputDir = 'vystupy\vstupy'
 New-Item -ItemType Directory -Force -Path (Join-Path $root $inputDir) | Out-Null
 $results = Read-Results
@@ -49,6 +64,16 @@ if ($cfg.doplnky) {
     $empty = $cfg.pomocne | Where-Object { $_.id -eq $cfg.doplnky.prazdny }
     foreach ($o in $plates) {
         $tasks += [pscustomobject]@{ id = "$($empty.id)@$($o.id)"; prompt = $empty.prompt; refs = @(); deps = @($o.id); typ = 'zVariantu'; zdroj = $o.id; kat = $null }
+    }
+}
+if ($cfg.zrkadlo) {
+    # The reflection in the mirror shows the opposite wall, which the cladding generations leave
+    # in the original cladding. It is repainted on the cladding without the shelf accessories.
+    foreach ($o in $plates) {
+        $src = $o.id
+        if ($cfg.doplnky) { $src = "$($cfg.doplnky.prazdny)@$($o.id)" }
+        $refs = @($o.referencie | ForEach-Object { Join-Path $root $_ })
+        $tasks += [pscustomobject]@{ id = "$($cfg.zrkadlo.id)@$($o.id)"; prompt = $cfg.zrkadlo.prompt; refs = $refs; deps = @($src); typ = 'zVariantu'; zdroj = $src; kat = $null }
     }
 }
 foreach ($v in $cfg.varianty) {
@@ -82,6 +107,51 @@ foreach ($t in $tasks) {
 }
 if ($waiting.Count -eq 0) { Write-Host 'Nothing to generate.'; return }
 
+# Dry run: the stages the loop below would run and their cost.
+if ($Plan) {
+    $done = @($results.Keys)
+    $left = @($waiting)
+    $stage = 0
+    while ($left.Count -gt 0) {
+        $pending = @($left | ForEach-Object { $_.id })
+        $ready = @($left | Where-Object {
+            @($_.deps | Where-Object { $done -notcontains $_ -or $pending -contains $_ }).Count -eq 0
+        })
+        if ($ready.Count -eq 0) { Write-Warning "Cannot generate, inputs are missing: $($pending -join ', ')"; break }
+        $stage++
+        Write-Host "Stage ${stage}:"
+        foreach ($t in $ready) {
+            $from = 'base photo'
+            if ($t.deps) { $from = $t.deps -join ', ' }
+            Write-Host "  $($t.id)  <- $from"
+        }
+        $done += @($ready | ForEach-Object { $_.id })
+        $left = @($left | Where-Object { $ready -notcontains $_ })
+    }
+    $n = $waiting.Count
+    if ($generator -eq 'kie') {
+        $per = $creditsPerImage[$cfg.resolution]
+        Write-Host ("{0} generation(s) x {1} kie.ai credits ({2}) = {3} credits, about `${4:N2}" -f $n, $per, $cfg.resolution, ($n * $per), ($n * $per * 0.005))
+        try { Write-Host "kie.ai balance: $(& $genScript -Credits) credits" } catch { Write-Warning "Balance not available: $($_.Exception.Message)" }
+        return
+    }
+    # OpenAI bills tokens: the estimate is the average of earlier results with the same settings.
+    $model = $genArgs.Model; $quality = $genArgs.Quality
+    if (-not $model) { $model = 'gpt-image-2.5-sunburst' }
+    if (-not $quality) { $quality = 'high' }
+    $costs = @(Get-ChildItem -LiteralPath (Join-Path $root 'vystupy') -Filter '*.json' -File | ForEach-Object {
+        try { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
+    } | Where-Object { $_.api -eq 'openai' -and $_.costUsd -and $_.model -eq $model -and $_.param.quality -eq $quality -and $_.param.resolution -eq $cfg.resolution } |
+        ForEach-Object { [double]$_.costUsd })
+    if ($costs.Count) {
+        $avg = ($costs | Measure-Object -Average).Average
+        Write-Host ("{0} generation(s) x about `${1:N3} ({2}, quality {3}; average of {4} earlier) = about `${5:N2}" -f $n, $avg, $model, $quality, $costs.Count, ($n * $avg))
+    } else {
+        Write-Host "$n generation(s) with $model, quality $quality. OpenAI bills tokens; the price is known after the first result (costUsd in its .json)."
+    }
+    return
+}
+
 # Prepares the input image of a task (in the base frame); returns its path relative to $root.
 function New-TaskInput($t) {
     switch ($t.typ) {
@@ -90,6 +160,7 @@ function New-TaskInput($t) {
         'naObklad' {
             $img = Get-Aligned $results $t.o.id
             $obj = Get-Aligned $results $t.v.id $t.kat
+            if ($t.v.mierka) { Set-Scale $results $obj $t.v $t.kat (Get-ScaleMask $results $t.v $t.kat) }
             $mask = Get-NewObject $results $t.v $t.kat $obj
             # The object's edge pixels carry the original background (a light halo on dark tiles,
             # which the model then keeps around bronze); they are moved to this cladding's
@@ -138,10 +209,10 @@ while ($waiting.Count -gt 0) {
         $in = New-TaskInput $t
         $images = @((Join-Path $root $in)) + $t.refs
         Write-Host "Starting $($t.id) ($($images.Count - 1) reference image(s))"
-        $job = Start-Job -Name $t.id -ArgumentList $kie, $t.prompt, $images, $cfg.aspectRatio, $cfg.resolution -ScriptBlock {
-            param($kie, $prompt, $images, $ratio, $res)
+        $job = Start-Job -Name $t.id -ArgumentList $genScript, $t.prompt, $images, $genArgs -ScriptBlock {
+            param($script, $prompt, $images, $opts)
             Set-ExecutionPolicy -Scope Process Bypass -Force
-            & $kie -Prompt $prompt -Images $images -AspectRatio $ratio -Resolution $res -TimeoutSec 900
+            & $script -Prompt $prompt -Images $images @opts
         }
         $job | Add-Member -NotePropertyName Vstup -NotePropertyValue $in -PassThru
     }
@@ -162,7 +233,9 @@ while ($waiting.Count -gt 0) {
                 zarovnanie = @([Math]::Round($al[0], 5), [Math]::Round($al[1], 5), [Math]::Round($al[2], 2), [Math]::Round($al[3], 2))
                 zhoda      = [Math]::Round($al[4], 3)
             }
-            Write-Host ("OK   {0}: {1}  (scale {2:N4} x {3:N4}, shift {4:N1}, {5:N1} px, match {6:N2})" -f $job.Name, $file, $al[0], $al[1], $al[2], $al[3], $al[4])
+            $price = ''
+            if ($meta.costUsd) { $results[$job.Name].cenaUsd = $meta.costUsd; $price = (", `${0:N3}" -f $meta.costUsd) }
+            Write-Host ("OK   {0}: {1}  (scale {2:N4} x {3:N4}, shift {4:N1}, {5:N1} px, match {6:N2}{7})" -f $job.Name, $file, $al[0], $al[1], $al[2], $al[3], $al[4], $price)
         } catch {
             Write-Warning "FAIL $($job.Name): $($_.Exception.Message)"
         }

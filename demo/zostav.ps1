@@ -10,6 +10,8 @@
     result, so the object is pixel-identical on every cladding,
   - the original shelf accessories are pasted onto every cladding background, after the model
     removed the cladding's own (redrawn) ones ("prazdne-doplnky@<obklad>"),
+  - floor layers are floor throughout the shower drain's strip ("pas"); every drain, the original
+    one too, is a layer with only its metal,
   - product thumbnails and the data block inside index.html.
 
 .EXAMPLE
@@ -79,12 +81,25 @@ if ($cfg.doplnky -and $results.Contains($cfg.doplnky.prazdny)) {
     $acc.okolie = [Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 30))
 }
 
-# A cladding result in the base frame, with the original shelf accessories.
+# The round mirror ("zrkadlo"): the cladding generations kept the original cladding in its
+# reflection; inside it the reflection repainted on the cladding without accessories is used.
+$mirror = $null
+if ($cfg.zrkadlo) {
+    $e = [double[]]$cfg.zrkadlo.elipsa
+    $mirror = [Mapa]::Elipsa($W, $H, $e[0], $e[1], $e[2], $e[3], (Get-Px 2))
+    if ($Ladenie) { [Obr]::ZMasky($mirror, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie 'maska-zrkadlo.jpg'), 80) }
+}
+
+# A cladding result in the base frame, with the new reflection and the original shelf accessories.
 function Get-Plate([string]$id) {
-    $bareId = "$($cfg.doplnky.prazdny)@$id"
-    if (-not $acc -or -not $results.Contains($bareId)) { return Get-Aligned $results $id }
     $plate = Get-Aligned $results $id
-    $bare = Get-Aligned $results $bareId $cfg.doplnky
+    $mirId = "$($cfg.zrkadlo.id)@$id"
+    $hasMirror = $mirror -and $results.Contains($mirId)
+    if ($hasMirror) { $plate.Prekry((Get-Aligned $results $mirId), $mirror) }
+    $bareId = "$($cfg.doplnky.prazdny)@$id"
+    if (-not $acc -or -not $results.Contains($bareId)) { return $plate }
+    # The cladding without accessories; the mirror result is one, with the new reflection.
+    if ($hasMirror) { $bare = Get-Aligned $results $mirId $cfg.doplnky } else { $bare = Get-Aligned $results $bareId $cfg.doplnky }
     # The cladding's own copies, sometimes larger than the originals: where it differs from its
     # copy without accessories, near the originals.
     $own = [Mapa]::Prah([Obr]::Rozdiel($plate.Rozmaz((Get-Px 2)), $bare.Rozmaz((Get-Px 2))), 22, 44)
@@ -128,6 +143,11 @@ foreach ($kat in $onPlates) {
     if ($kat.prazdny) { $empty = (Get-Aligned $results $kat.prazdny $kat).Rozmaz((Get-Px 1)) }
     foreach ($v in @($cfg.varianty | Where-Object { $_.kategoria -eq $kat.id -and $results.Contains($_.id) })) {
         $img = Get-Aligned $results $v.id $kat
+        $scaleMask = $null
+        if ($v.mierka) {
+            $scaleMask = Get-ScaleMask $results $v $kat
+            Set-Scale $results $img $v $kat $scaleMask
+        }
         $nove = Get-NewObject $results $v $kat $img
         # A white object on a white old one barely differs from the base: the object mask is added.
         $own = [Mapa]::Max((Get-Mask $img $kat $baseBlur), $nove)
@@ -137,7 +157,7 @@ foreach ($kat in $onPlates) {
         $solid = $nove
         if ($empty) { $solid = [Mapa]::Min($nove, [Mapa]::Prah([Obr]::Rozdiel($img.Rozmaz((Get-Px 1)), $empty), 45, 75)) }
         $core = [Mapa]::Rozmaz([Mapa]::Zuz([Mapa]::Prah($solid, 0.5, 0.9), $W, $H, (Get-Px 2)), $W, $H, (Get-Px 1))
-        $fix[$v.id] = @{ img = $img; own = $own; nove = $nove; core = $core; kat = $kat }
+        $fix[$v.id] = @{ img = $img; own = $own; nove = $nove; core = $core; kat = $kat; mierka = $scaleMask }
         if ($footprint[$kat.id]) { $footprint[$kat.id] = [Mapa]::Max($footprint[$kat.id], $own) } else { $footprint[$kat.id] = $own }
         $ids += $v.id
         if ($Ladenie) { [Obr]::ZMasky($nove, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "objekt-$($v.id).jpg"), 80) }
@@ -154,21 +174,65 @@ foreach ($kat in $onPlates) {
     }
 }
 
-# Objects that surface layers leave out ("bezObjektov"): the floor generation may redraw the
-# shower drain, which has its own category; the drain then comes from the layer below.
-$cutouts = @{}
+# Objects that surface layers leave out ("bezObjektov"), i.e. the linear shower drain: the floor
+# generations redraw it (longer, or over the floor strip between it and the wall) and the graphite
+# drain is wider than the original. Inside the drain category's "pas" (the strip from the wall to
+# the front edge of the drain; the back wall faces the camera, so it is axis-aligned) every floor
+# layer is floor throughout, and every drain, the original one too, has its own layer with only
+# its metal. A floor that differs from the floor strip of the base would otherwise show the
+# original floor around the drain.
+$strips = @{}   # object category id -> @{ rect; mask; shift; empty; old }
+
+# Metal of a drain in img: where it differs from the base with the strip filled with floor. The
+# graphite drain is drawn a few pixels up the wall, hence the margin above the strip (with the
+# normal threshold: the cladding there is not the base's). A new drain covers the whole strip and
+# behind the glass differs little from the floor: a lower threshold inside the strip ($t0, $t1).
+# The original one does not cover it (the floor strip by the wall is a bit darker than the fill).
+function Get-StripMetal($img, $s, [float]$t0, [float]$t1) {
+    $d = [Obr]::Rozdiel($img.Rozmaz((Get-Px 1)), $s.empty.Rozmaz((Get-Px 1)))
+    $a = [Mapa]::Min([Mapa]::Prah($d, 30, 50), [Mapa]::Rozsir($s.mask, $W, $H, (Get-Px 3)))
+    $a = [Mapa]::Max($a, [Mapa]::Min([Mapa]::Prah($d, $t0, $t1), $s.mask))
+    $a = [Mapa]::Zuz([Mapa]::Rozsir($a, $W, $H, (Get-Px 3)), $W, $H, (Get-Px 3))   # the slot, the cover
+    $a = [Mapa]::Rozsir([Mapa]::Zuz($a, $W, $H, (Get-Px 1)), $W, $H, (Get-Px 1))   # specks
+    , [Mapa]::Rozmaz($a, $W, $H, 1)
+}
+
+# The floor rows just below the strip, moved up into it.
+function Get-StripFill($img, $s) { $img.Posun($s.rect, [int[]](0, $s.shift)) }
+
 foreach ($cid in @($cfg.kategorie | ForEach-Object { $_.bezObjektov } | Where-Object { $_ } | Select-Object -Unique)) {
     $ck = $cfg.kategorie | Where-Object { $_.id -eq $cid }
-    $u = $null
-    foreach ($v in @($cfg.varianty | Where-Object { $_.kategoria -eq $cid -and $results.Contains($_.id) })) {
-        $m = Get-Mask (Get-Aligned $results $v.id $ck) $ck $baseBlur
-        if ($u) { $u = [Mapa]::Max($u, $m) } else { $u = $m }
+    $fk = $cfg.kategorie | Where-Object { @($_.bezObjektov) -contains $cid -and $_.kluc -and $results.Contains($_.kluc) } | Select-Object -First 1
+    if (-not $ck.pas -or -not $fk) { Write-Warning "${cid}: no 'pas' or floor key, floor layers keep the redrawn drain"; continue }
+    $p = [double[]]$ck.pas
+    # Floor part of the strip from the floor key; the unpainted drain lies inside the floor and is
+    # closed, the green behind the glass is tinted (low threshold).
+    $m = [Mapa]::Prah((Get-Aligned $results $fk.kluc $fk).Zelena(50, 110), 0.1, 0.3)
+    $m = [Mapa]::Zuz([Mapa]::Rozsir($m, $W, $H, (Get-Px 5)), $W, $H, (Get-Px 5))
+    [Mapa]::Oblast($m, $W, $H, $p)
+    $m = [Mapa]::Rozmaz($m, $W, $H, 1)
+    # The fill skips the highlights on the floor right in front of the drain.
+    $s = @{ rect = $p; mask = $m; shift = [int][Math]::Ceiling(($p[3] - $p[1]) * $H) + (Get-Px 6) }
+    $s.empty = $base.Kopia()
+    $s.empty.Prekry((Get-StripFill $base $s), $m)
+    $s.old = Get-StripMetal $base $s 30 50
+    $strips[$cid] = $s
+    if ($Ladenie) {
+        [Obr]::ZMasky($m, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "pas-$cid.jpg"), 80)
+        [Obr]::ZMasky($s.old, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "pas-$cid-povodny.jpg"), 80)
     }
-    if ($u) { $cutouts[$cid] = [Mapa]::Doplnok([Mapa]::Rozsir($u, $W, $H, (Get-Px 2))) }
 }
-function Remove-Cutouts($alfa, $kat) {
+
+# A floor layer in the strips: the floor just below moved up (the model draws its own drain or
+# its frame there, behind the glass with too little contrast to tell); opaque in the whole strip.
+function Set-Strips($img, $alfa, $kat) {
     $a = $alfa
-    foreach ($cid in @($kat.bezObjektov)) { if ($cid -and $cutouts[$cid]) { $a = [Mapa]::Min($a, $cutouts[$cid]) } }
+    foreach ($cid in @($kat.bezObjektov)) {
+        $s = $strips[$cid]
+        if (-not $s) { continue }
+        $img.Prekry((Get-StripFill $img $s), $s.mask)
+        $a = [Mapa]::Max($a, $s.mask)
+    }
     , $a
 }
 
@@ -209,7 +273,11 @@ foreach ($kat in $cfg.kategorie) {
             if ($Ladenie) { [Obr]::ZMasky($f.alfa, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "maska-$($v.id).jpg"), 80) }
         } else {
             $img = Get-Aligned $results $v.id $kat
-            $alfa = Remove-Cutouts (Get-SurfaceMask $img $kat) $kat
+            if ($strips[$kat.id]) {
+                $alfa = Get-StripMetal $img $strips[$kat.id] 12 25
+            } else {
+                $alfa = Set-Strips $img (Get-SurfaceMask $img $kat) $kat
+            }
             $opt.vrstvy = [ordered]@{ '*' = (Save-Pieces $img $alfa $v.id $roi) }
             if ($union) { $union = [Mapa]::Max($union, $alfa) } else { $union = $alfa }
             if ($Ladenie) { [Obr]::ZMasky($alfa, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "maska-$($v.id).jpg"), 80) }
@@ -223,10 +291,15 @@ foreach ($kat in $cfg.kategorie) {
     if ($kat.typ -eq 'plocha' -and $union) {
         $moznosti[0].vrstvy = [ordered]@{ '*' = (Save-Pieces $base $union "$($kat.id)-povodny" $roi) }
     }
+    # The floor layers cover the drain strip, so the original drain gets a layer of its own.
+    if ($strips[$kat.id]) {
+        $moznosti[0].vrstvy = [ordered]@{ '*' = (Save-Pieces $base $strips[$kat.id].old "$($kat.id)-povodny" $roi) }
+    }
     $kategorie += [ordered]@{ id = $kat.id; nazov = $kat.nazov; typ = $kat.typ; z = $kat.z; moznosti = $moznosti }
 }
 
 # Per-cladding layers, one cladding at a time (4K images are large).
+$oldObj = @{}   # category id -> mask of the original objects
 foreach ($o in $plates) {
     Write-Host "  on $($o.id)"
     $plateImg = Get-Plate $o.id
@@ -241,12 +314,24 @@ foreach ($o in $plates) {
             }
             $f = $fix[$v.id]
             $img = Get-Aligned $results $key $kat
+            if ($f.mierka) { Set-Scale $results $img $v $kat $f.mierka }
+            # Variant option "pozadieZ": where the old object stood outside this one, the model
+            # sometimes keeps a ghost of it on the cladding (the old basin's edge next to the wide
+            # Savoy). The narrower variant's result on the same cladding is clean wall there.
+            $sib = $v.pozadieZ
+            if ($sib -and $fix.ContainsKey($sib) -and $results.Contains("$sib@$($o.id)")) {
+                if (-not $oldObj.ContainsKey($kat.id)) { $oldObj[$kat.id] = Get-OldObjects $results $kat }
+                $gap = [Mapa]::Min($oldObj[$kat.id], [Mapa]::Doplnok([Mapa]::Rozsir($f.nove, $W, $H, (Get-Px 1))))
+                $gap = [Mapa]::Min($gap, [Mapa]::Doplnok([Mapa]::Rozsir($fix[$sib].nove, $W, $H, (Get-Px 6))))
+                $img.Prekry((Get-Aligned $results "$sib@$($o.id)" $kat), [Mapa]::Rozmaz($gap, $W, $H, (Get-Px 1)))
+            }
             # Only the old and new object positions: elsewhere the model may have repainted the
             # wall with a slightly different pattern, which would show as a seam.
             $alfa = [Mapa]::Max($f.nove, $footprint[$kat.id])
             Set-ColumnCut $alfa $f.nove $kat $key
             if ($kat.bezDoplnkov -and $accCut) { $alfa = [Mapa]::Min($alfa, $accCut) }
-            # Category option "polica": rows from this y down are the shelf, which is the same on
+            # Category option "polica": rows from this y down are the shelf (from its top surface by
+            # the wall; next to the dark Graphit the model tints it warm), which is the same on
             # every cladding. The model repaints it unevenly where the old washbasin stood, so it
             # is taken from the variant's own result (and toned to the cladding below).
             if ($kat.polica) { $img.Prekry($f.img, [Mapa]::Riadky($W, $H, [double]$kat.polica, (Get-Px 2))) }
@@ -264,11 +349,10 @@ foreach ($o in $plates) {
 }
 
 # --- Data block inside index.html -------------------------------------------------
-$credits = @{ '1K' = 6; '2K' = 10; '4K' = 16 }
 $data = [ordered]@{
     sirka = $W; vyska = $H
     povodny = 'img/povodny.jpg'
-    model = 'gpt-image-2-5-flare-image-to-image'; rozlisenie = $cfg.resolution; kreditovZaObrazok = $credits[$cfg.resolution]
+    model = 'gpt-image-2-5-flare-image-to-image'; rozlisenie = $cfg.resolution; kreditovZaObrazok = $creditsPerImage[$cfg.resolution]
     kategorie = $kategorie
 }
 $json = $data | ConvertTo-Json -Depth 10 -Compress

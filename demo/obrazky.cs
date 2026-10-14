@@ -391,6 +391,16 @@ public class Obr
         return o;
     }
 
+    // Copy scaled by k about the point (sx, sy) of this image, which moves to (dx, dy).
+    public Obr Mierka(double sx, double sy, double dx, double dy, double k)
+    {
+        var o = new Obr(W, H);
+        o.R = Mapa.Mierka(R, W, H, sx, sy, dx, dy, k);
+        o.G = Mapa.Mierka(G, W, H, sx, sy, dx, dy, k);
+        o.B = Mapa.Mierka(B, W, H, sx, sy, dx, dy, k);
+        return o;
+    }
+
     public Obr Kopia()
     {
         var o = new Obr(W, H);
@@ -534,6 +544,42 @@ public static class Mapa
             float v = y >= r ? 1f : 1f - (float)(r - y) / (feather + 1);
             for (int x = 0; x < w; x++) o[y * w + x] = v;
         }
+        return o;
+    }
+
+    // Map scaled by k about the point (sx, sy), which moves to (dx, dy): every pixel p is sampled
+    // bilinearly at s + (p - d) / k (clamped to the edges).
+    public static float[] Mierka(float[] m, int w, int h, double sx, double sy, double dx, double dy, double k)
+    {
+        var o = new float[m.Length];
+        Parallel.For(0, h, y =>
+        {
+            double qy = Math.Max(0, Math.Min(h - 1.001, sy + (y - dy) / k));
+            int y0 = (int)qy; double fy = qy - y0;
+            for (int x = 0; x < w; x++)
+            {
+                double qx = Math.Max(0, Math.Min(w - 1.001, sx + (x - dx) / k));
+                int x0 = (int)qx; double fx = qx - x0;
+                int c = y0 * w + x0;
+                o[y * w + x] = (float)((m[c] * (1 - fx) + m[c + 1] * fx) * (1 - fy) + (m[c + w] * (1 - fx) + m[c + w + 1] * fx) * fy);
+            }
+        });
+        return o;
+    }
+
+    // 1 inside the ellipse with normalised centre (cx, cy) and radii (rx, ry), falling linearly
+    // to 0 over `feather` pixels inside its edge.
+    public static float[] Elipsa(int w, int h, double cx, double cy, double rx, double ry, int feather)
+    {
+        var o = new float[w * h];
+        double ax = rx * w, ay = ry * h, r = Math.Min(ax, ay), f = Math.Max(1, feather);
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                double dx = (x + 0.5 - cx * w) / ax, dy = (y + 0.5 - cy * h) / ay;
+                double inside = (1 - Math.Sqrt(dx * dx + dy * dy)) * r;   // pixels from the edge
+                o[y * w + x] = (float)Math.Max(0, Math.Min(1, inside / f));
+            }
         return o;
     }
 

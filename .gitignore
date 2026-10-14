@@ -11,3 +11,10 @@ desktop.ini
 Thumbs.db
 ~$*
 *.tmp
+
+# Secrets (API keys) – never commit, repo is public
+.env
+.env.*
+
+# Python
+__pycache__/

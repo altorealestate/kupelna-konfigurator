@@ -17,6 +17,9 @@ $H = [int]$cfg.vyska
 $pxScale = $W / 1448.0
 function Get-Px([double]$r) { [int][Math]::Max(1, [Math]::Round($r * $pxScale)) }
 
+# kie.ai credits per generated image (1 credit = $0.005).
+$creditsPerImage = @{ '1K' = 6; '2K' = 10; '4K' = 16 }
+
 function Read-Results {
     $results = [ordered]@{}
     if (Test-Path -LiteralPath $resultsPath) {
@@ -125,6 +128,45 @@ function Get-Accessories($results) {
     $erase = [Mapa]::Min([Mapa]::Rozsir($nove, $W, $H, (Get-Px 12)), $mimo)
     [Mapa]::Oblast($erase, $W, $H, [double[]]$acc.roi)
     @{ base = $base; empty = (Get-Aligned $results $acc.prazdny $acc).Rozmaz((Get-Px 1)); nove = $nove; kluc = $k; erase = [Mapa]::Max($erase, $nove); mimo = $mimo }
+}
+
+# Variant option "mierka": the model drew the object too large (the black washbasin mixer, about
+# 1.5 times the original one). Inside "roi" the object is scaled by "k" about the point "z" (where
+# it stands on the shelf), which moves to "do" (the original mixer's spot). From row "okraj" down
+# the washbasin's back rim stands in front of it (straight there; the green key of the basin is
+# painted a dozen pixels too high).
+# Two masks of the large object: "vysoka" with its shading on the wall (cleared to the background)
+# and "tesna", the object alone (pasted scaled; scaled wall around it would show as a lighter box).
+function Get-ScaleMask($results, $v, $kat) {
+    $roi = [double[]]$v.mierka.roi
+    $img = Get-Aligned $results $v.id $kat
+    $m = Get-NewObject $results $v $kat $img
+    [Mapa]::Oblast($m, $W, $H, $roi)
+    $t = [Mapa]::Prah([Obr]::Rozdiel($img.Rozmaz(1), (Get-Aligned $results $kat.prazdny $kat).Rozmaz(1)), 40, 80)
+    [Mapa]::Oblast($t, $W, $H, $roi)
+    $t = [Mapa]::Zuz([Mapa]::Rozsir($t, $W, $H, (Get-Px 1)), $W, $H, (Get-Px 1))   # highlights inside
+    $t = [Mapa]::Rozsir([Mapa]::Zuz($t, $W, $H, 1), $W, $H, 1)                     # specks
+    @{ vysoka = [Mapa]::Rozmaz([Mapa]::Rozsir($m, $W, $H, (Get-Px 2)), $W, $H, 1); tesna = [Mapa]::Rozmaz($t, $W, $H, 1) }
+}
+# The freed wall is the helper image without objects ("prazdny") moved to the wall colour of $img
+# around the object: a cladding result still has the original mixer, a few pixels off on some.
+function Set-Scale($results, $img, $v, $kat, $masks) {
+    $s = $v.mierka
+    $z = [double[]]$s.z
+    $d = [double[]]$s.do
+    $t = ($z[0] * $W), ($z[1] * $H), ($d[0] * $W), ($d[1] * $H), [double]$s.k
+    $scaled = $img.Mierka($t[0], $t[1], $t[2], $t[3], $t[4])
+    $small = [Mapa]::Mierka($masks.tesna, $W, $H, $t[0], $t[1], $t[2], $t[3], $t[4])
+    $front = [Mapa]::Riadky($W, $H, [double]$s.okraj, 2)
+    $small = [Mapa]::Min($small, [Mapa]::Doplnok($front))
+    $empty = Get-Aligned $results $kat.prazdny $kat
+    $keep = [Mapa]::Doplnok([Mapa]::Max([Mapa]::Rozsir($masks.vysoka, $W, $H, (Get-Px 3)), $front))
+    $bg = [Obr]::Prefarbi($empty, $empty.RozmazVazene($keep, (Get-Px 25)), $img.RozmazVazene($keep, (Get-Px 25)), 1000, 1001)
+    # The large mixer's foot reached over the back rim of the washbasin, which is the same on
+    # every cladding: there the helper image is used as it is.
+    $img.Prekry($empty, [Mapa]::Min($masks.vysoka, $front))
+    $img.Prekry($bg, [Mapa]::Min($masks.vysoka, [Mapa]::Doplnok($front)))
+    $img.Prekry($scaled, $small)
 }
 
 # Helper results a per-cladding task of variant $v needs besides the variant and the cladding.

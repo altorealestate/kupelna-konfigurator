@@ -19,6 +19,9 @@
 
 .EXAMPLE
   & .\kie-image.ps1 -TaskId 281e5b0...   # resume waiting for / downloading an existing task
+
+.EXAMPLE
+  & .\kie-image.ps1 -Credits             # remaining kie.ai credits (free)
 #>
 [CmdletBinding(DefaultParameterSetName = 'Create')]
 param(
@@ -49,6 +52,9 @@ param(
 
     [Parameter(ParameterSetName = 'Resume', Mandatory = $true)]
     [string]$TaskId,
+
+    [Parameter(ParameterSetName = 'Credits', Mandatory = $true)]
+    [switch]$Credits,
 
     [string]$OutDir,
 
@@ -148,6 +154,12 @@ function Send-KieFile([string]$Path) {
     }
     if (-not $resp.data.downloadUrl) { throw "Upload of '$Path' returned no downloadUrl." }
     $resp.data.downloadUrl
+}
+
+# --- Remaining credits -----------------------------------------------------------
+if ($PSCmdlet.ParameterSetName -eq 'Credits') {
+    (Invoke-Kie 'GET' "$ApiBase/chat/credit").data
+    return
 }
 
 # --- Create task ---------------------------------------------------------------
