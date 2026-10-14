@@ -101,6 +101,32 @@ function Get-OldObjects($results, $kat) {
     , [Mapa]::Rozsir($a, $W, $H, (Get-Px 3))
 }
 
+# Shelf accessories ("doplnky"), which no option changes but every cladding generation redraws
+# (often deformed): the original ones are where the base photo differs from the helper image
+# without them ("nove"); clear glass barely differs from the wall seen through it, so the outlines
+# of the vase and the bottles come from a copy with them painted green ("kluc"). "erase" adds a
+# margin for the cladding's own, sometimes larger copies; "mimo" leaves out the washbasin of
+# categories with "bezDoplnkov" (it has its own layers).
+function Get-Accessories($results) {
+    $acc = $cfg.doplnky
+    $base = Get-Input $cfg.podklad
+    $nove = Get-NewObject $results $null $acc $base
+    $k = $null
+    if ($acc.kluc) {
+        $k = (Get-Aligned $results $acc.kluc $acc).Zelena(50, 110)
+        [Mapa]::Oblast($k, $W, $H, [double[]]$acc.roi)
+        $k = [Mapa]::Rozmaz($k, $W, $H, (Get-Px 1))
+        $nove = [Mapa]::Max($nove, $k)
+    }
+    $mimo = [Mapa]::Doplnok((New-Object 'float[]' ($W * $H)))
+    foreach ($kat in @($cfg.kategorie | Where-Object { $_.bezDoplnkov })) {
+        $mimo = [Mapa]::Min($mimo, [Mapa]::Doplnok((Get-OldObjects $results $kat)))
+    }
+    $erase = [Mapa]::Min([Mapa]::Rozsir($nove, $W, $H, (Get-Px 12)), $mimo)
+    [Mapa]::Oblast($erase, $W, $H, [double[]]$acc.roi)
+    @{ base = $base; empty = (Get-Aligned $results $acc.prazdny $acc).Rozmaz((Get-Px 1)); nove = $nove; kluc = $k; erase = [Mapa]::Max($erase, $nove); mimo = $mimo }
+}
+
 # Helper results a per-cladding task of variant $v needs besides the variant and the cladding.
 function Get-ObjectDeps($v, $kat) {
     if ($kat.promptKluc) { "$($v.id)#kluc" } else { $kat.prazdny }

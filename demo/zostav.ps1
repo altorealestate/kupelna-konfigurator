@@ -8,6 +8,8 @@
   - categories with "naObkladoch" get one set of pieces per wall cladding, from the
     "<variant>@<obklad>" results; the core of the object is restored from the variant's own
     result, so the object is pixel-identical on every cladding,
+  - the original shelf accessories are pasted onto every cladding background, after the model
+    removed the cladding's own (redrawn) ones ("prazdne-doplnky@<obklad>"),
   - product thumbnails and the data block inside index.html.
 
 .EXAMPLE
@@ -63,6 +65,57 @@ $plateCat = $cfg.kategorie | Where-Object { $_.typ -eq 'podklad' } | Select-Obje
 $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id -and $results.Contains($_.id) })
 $onPlates = @($cfg.kategorie | Where-Object { $_.naObkladoch })
 
+# Shelf accessories ("doplnky"): the cladding generations redraw (and deform) them, so on every
+# cladding background they are replaced by the original ones: the model only removed them from
+# the cladding ("<prazdny>@<cladding>"), the originals are pasted onto that, their wall-like
+# pixels (edges, shadows, the wall seen through the glass) moved pixel by pixel from the base
+# without accessories to this cladding without them. Categories with "bezDoplnkov" leave the
+# accessories to the background.
+$acc = $null
+$accCut = $null
+if ($cfg.doplnky -and $results.Contains($cfg.doplnky.prazdny)) {
+    $acc = Get-Accessories $results
+    $accCut = [Mapa]::Doplnok([Mapa]::Rozmaz($acc.erase, $W, $H, (Get-Px 2)))
+    $acc.okolie = [Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 30))
+}
+
+# A cladding result in the base frame, with the original shelf accessories.
+function Get-Plate([string]$id) {
+    $bareId = "$($cfg.doplnky.prazdny)@$id"
+    if (-not $acc -or -not $results.Contains($bareId)) { return Get-Aligned $results $id }
+    $plate = Get-Aligned $results $id
+    $bare = Get-Aligned $results $bareId $cfg.doplnky
+    # The cladding's own copies, sometimes larger than the originals: where it differs from its
+    # copy without accessories, near the originals.
+    $own = [Mapa]::Prah([Obr]::Rozdiel($plate.Rozmaz((Get-Px 2)), $bare.Rozmaz((Get-Px 2))), 22, 44)
+    $own = [Mapa]::Min([Mapa]::Rozsir([Mapa]::Zuz($own, $W, $H, (Get-Px 1)), $W, $H, (Get-Px 5)), $acc.okolie)
+    [Mapa]::Oblast($own, $W, $H, [double[]]$cfg.doplnky.roi)
+    $alfa = [Mapa]::Rozmaz([Mapa]::Max($acc.erase, [Mapa]::Min($own, $acc.mimo)), $W, $H, (Get-Px 2))
+    if ($Ladenie) { [Obr]::ZMasky($alfa, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "maska-doplnky-$id.jpg"), 80) }
+    $bare.Pripocitaj([Obr]::Vyrovnanie($plate, $bare, $alfa, (Get-Px 7), 2000, 14), $alfa)
+    $low = $bare.Rozmaz((Get-Px 1))
+    $obj = [Obr]::Prefarbi($acc.base, $acc.empty, $low, 25, 55)
+    # Inside the outlines from the key, opaque parts coloured like the wall (the soap) still differ
+    # from it clearly more than the clear glass does: a lower threshold keeps them.
+    if ($acc.kluc) { $obj.Prekry([Obr]::Prefarbi($acc.base, $acc.empty, $low, 18, 32), [Mapa]::Zuz($acc.kluc, $W, $H, (Get-Px 1))) }
+    $bare.Prekry($obj, $acc.nove)
+    $plate.Prekry($bare, $alfa)
+    $plate
+}
+
+# Category option "kluc": a helper result with the whole surface painted green. The difference to
+# the base misses spots where the old and the new surface have a similar tone (the floor in the
+# shadow under the shelf), so the inside of the surface comes from the key, its edges from the
+# difference.
+function Get-SurfaceMask($img, $kat) {
+    $a = Get-Mask $img $kat $baseBlur
+    if (-not $kat.kluc -or -not $results.Contains($kat.kluc)) { return , $a }
+    $k = (Get-Aligned $results $kat.kluc $kat).Zelena(50, 110)
+    [Mapa]::Oblast($k, $W, $H, [double[]]$kat.roi)
+    $inner = [Mapa]::Rozmaz([Mapa]::Zuz($k, $W, $H, (Get-Px 2)), $W, $H, (Get-Px 1))
+    , [Mapa]::Max([Mapa]::Min($a, [Mapa]::Rozsir($k, $W, $H, (Get-Px 3))), $inner)
+}
+
 # Pre-pass for objects placed on every cladding: their result on the original cladding, the
 # object alone (difference to the helper image without objects) and the footprint, i.e. the
 # union of old and new object positions. On dark tiles the old chrome objects barely differ
@@ -96,6 +149,7 @@ foreach ($kat in $onPlates) {
         # float[] into object[] and C# would then modify a temporary copy.
         $alfa = [Mapa]::Max($fix[$id].own, $footprint[$kat.id])
         Set-ColumnCut $alfa $fix[$id].nove $kat $id
+        if ($kat.bezDoplnkov -and $accCut) { $alfa = [Mapa]::Min($alfa, $accCut) }
         $fix[$id].alfa = $alfa
     }
 }
@@ -144,7 +198,7 @@ foreach ($kat in $cfg.kategorie) {
 
         $opt = [ordered]@{ id = $v.id; nazov = $v.nazov; kratko = $v.kratko; detail = $v.detail; nahlad = $refs[0] }
         if ($kat.typ -eq 'podklad') {
-            (Get-Aligned $results $v.id).UlozJpg((Join-Path $imgDir "$($v.id).jpg"), 85)
+            (Get-Plate $v.id).UlozJpg((Join-Path $imgDir "$($v.id).jpg"), 85)
             $opt.obrazok = "img/$($v.id).jpg"
         } elseif ($kat.naObkladoch) {
             $f = $fix[$v.id]
@@ -155,7 +209,7 @@ foreach ($kat in $cfg.kategorie) {
             if ($Ladenie) { [Obr]::ZMasky($f.alfa, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "maska-$($v.id).jpg"), 80) }
         } else {
             $img = Get-Aligned $results $v.id $kat
-            $alfa = Remove-Cutouts (Get-Mask $img $kat $baseBlur) $kat
+            $alfa = Remove-Cutouts (Get-SurfaceMask $img $kat) $kat
             $opt.vrstvy = [ordered]@{ '*' = (Save-Pieces $img $alfa $v.id $roi) }
             if ($union) { $union = [Mapa]::Max($union, $alfa) } else { $union = $alfa }
             if ($Ladenie) { [Obr]::ZMasky($alfa, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "maska-$($v.id).jpg"), 80) }
@@ -175,7 +229,7 @@ foreach ($kat in $cfg.kategorie) {
 # Per-cladding layers, one cladding at a time (4K images are large).
 foreach ($o in $plates) {
     Write-Host "  on $($o.id)"
-    $plateImg = Get-Aligned $results $o.id
+    $plateImg = Get-Plate $o.id
     foreach ($kat in $onPlates) {
         foreach ($v in @($cfg.varianty | Where-Object { $_.kategoria -eq $kat.id -and $fix.ContainsKey($_.id) })) {
             $key = "$($v.id)@$($o.id)"
@@ -191,6 +245,7 @@ foreach ($o in $plates) {
             # wall with a slightly different pattern, which would show as a seam.
             $alfa = [Mapa]::Max($f.nove, $footprint[$kat.id])
             Set-ColumnCut $alfa $f.nove $kat $key
+            if ($kat.bezDoplnkov -and $accCut) { $alfa = [Mapa]::Min($alfa, $accCut) }
             # Category option "polica": rows from this y down are the shelf, which is the same on
             # every cladding. The model repaints it unevenly where the old washbasin stood, so it
             # is taken from the variant's own result (and toned to the cladding below).

@@ -7,9 +7,10 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 ## Ako to funguje
 
 - Každý produkt z katalógu sa do pôvodnej vizualizácie (štandard ST1) vložil generáciou cez [kie.ai](https://kie.ai), model `gpt-image-2-5-flare-image-to-image` v rozlíšení 4K (3312 × 2480 px). Jedna generácia stojí 16 kreditov (≈ $0,08) a trvá asi 1–2 min.
-- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 27 generácií je tak 216 kombinácií.
+- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 34 generácií je tak 216 kombinácií.
 - Model v 4K scénu mierne preráma (zväčší alebo posunie o pár pixelov), preto sa každý výsledok pred skladaním automaticky zarovná na podklad.
-- Batérie a umývadlá majú na každom obklade rovnakú veľkosť a polohu: vygenerujú sa raz, tie isté pixely sa vložia na každý obklad a AI len dočistí okolie (zvyšky pôvodných batérií, svetlé okraje). Bronzové batérie sú prefarbené čierne, takže ani zmena farby neposunie tvar. K batériám patrí aj sifón pod umývadlom a krytka prepadu vane, majú rovnakú farbu ako batérie.
+- Batérie a umývadlá majú na každom obklade rovnakú veľkosť a polohu: vygenerujú sa raz, tie isté pixely sa vložia na každý obklad a AI len dočistí okolie (zvyšky pôvodných batérií, svetlé okraje). Bronzové batérie sú prefarbené čierne, takže ani zmena farby neposunie tvar. K batériám patrí aj sifón pod umývadlom a krytka prepadu vane, majú rovnakú farbu ako batérie. Umývadlová batéria smeruje výtokom k divákovi ako pôvodná.
+- Doplnky na polici (váza s vetvičkou, difuzér, mydlo, podnos) sú na každom obklade pôvodné: generácia obkladu ich prekreslí a zdeformuje, preto ich AI z obkladu len odstráni a vložia sa tie z pôvodnej vizualizácie.
 - Sprcha v ST1 je Hansgrohe Pulsify S 260 v chróme, čierna a bronzová sa preto iba prefarbí. Umývadlá majú v prompte rozmer voči pôvodnému Laufen living SQ 600 × 340 mm.
 - Ide o orientačný náhľad. Finálnu vizualizáciu zostavy, ktorú si klient vyberie, je lepšie vygenerovať naraz.
 

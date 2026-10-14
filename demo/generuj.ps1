@@ -5,8 +5,10 @@
   to the base frame (at 4K the model re-frames the scene slightly).
 
   - helper images ("pomocne") and plain variants are generated from the base photo,
-  - a variant with "zVariantu" is generated from another variant's or helper's result (bronze
-    taps are recoloured black ones, so both have the same shape, size and position),
+  - a variant or helper with "zVariantu" is generated from another variant's or helper's result
+    (bronze taps are recoloured black ones, so both have the same shape, size and position),
+  - the shelf accessories ("doplnky"), which every cladding generation redraws, are removed
+    from each cladding ("prazdne-doplnky@<obklad>"); zostav.ps1 pastes the original ones back,
   - for categories with "naObkladoch" the object of each variant is cut out (difference
     against the category's helper image without objects, "prazdny", or a copy in which the
     model painted the object pure green, "<variant>#kluc"), pasted onto every wall-cladding
@@ -36,8 +38,19 @@ $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id })
 
 $tasks = @(foreach ($p in @($cfg.pomocne)) {
     $refs = @($p.referencie | Where-Object { $_ } | ForEach-Object { Join-Path $root $_ })
-    [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = $refs; deps = @(); typ = 'podklad' }
+    if ($p.zVariantu) {
+        $kat = $cfg.kategorie | Where-Object { $_.id -eq $p.kategoria }
+        [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = $refs; deps = @($p.zVariantu); typ = 'zVariantu'; zdroj = $p.zVariantu; kat = $kat }
+    } else {
+        [pscustomobject]@{ id = $p.id; prompt = $p.prompt; refs = $refs; deps = @(); typ = 'podklad' }
+    }
 })
+if ($cfg.doplnky) {
+    $empty = $cfg.pomocne | Where-Object { $_.id -eq $cfg.doplnky.prazdny }
+    foreach ($o in $plates) {
+        $tasks += [pscustomobject]@{ id = "$($empty.id)@$($o.id)"; prompt = $empty.prompt; refs = @(); deps = @($o.id); typ = 'zVariantu'; zdroj = $o.id; kat = $null }
+    }
+}
 foreach ($v in $cfg.varianty) {
     $kat = $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria }
     $refs = @($v.referencie | ForEach-Object { Join-Path $root $_ })
