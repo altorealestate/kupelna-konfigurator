@@ -282,6 +282,28 @@ public class Obr
         return o;
     }
 
+    // Clear glass made on the base walls moved to another background: the wall seen through it
+    // darkens or lightens in proportion to the new wall and what is lighter than the base wall
+    // (reflections) is added, per channel out = plateLow * min(layer, baseLow) / baseLow +
+    // max(0, layer - baseLow). Parts far from the base colour (the branch in the vase) stay
+    // untouched, as in Prefarbi.
+    public static Obr Sklo(Obr layer, Obr baseLow, Obr plateLow, float t0, float t1)
+    {
+        var o = new Obr(layer.W, layer.H);
+        float[][] l = { layer.R, layer.G, layer.B }, b = { baseLow.R, baseLow.G, baseLow.B }, p = { plateLow.R, plateLow.G, plateLow.B }, oc = { o.R, o.G, o.B };
+        for (int i = 0; i < layer.R.Length; i++)
+        {
+            float dist = Math.Max(Math.Abs(l[0][i] - b[0][i]), Math.Max(Math.Abs(l[1][i] - b[1][i]), Math.Abs(l[2][i] - b[2][i])));
+            float bg = 1f - Math.Min(1f, Math.Max(0f, (dist - t0) / (t1 - t0)));
+            for (int k = 0; k < 3; k++)
+            {
+                float t = p[k][i] * Math.Min(l[k][i], b[k][i]) / Math.Max(1f, b[k][i]) + Math.Max(0f, l[k][i] - b[k][i]);
+                oc[k][i] = l[k][i] + (t - l[k][i]) * bg;
+            }
+        }
+        return o;
+    }
+
     // Chroma key: how pure green a pixel is (an object the model painted #00FF00),
     // soft threshold of G - max(R, B).
     public float[] Zelena(float t0, float t1)

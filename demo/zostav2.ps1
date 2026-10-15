@@ -193,6 +193,11 @@ function Save-Layer($layer, [string]$name, [double[]]$q, [int]$reach) {
 # them to this cladding (as in zostav.ps1). Glass cannot be one layer for every cladding: what is
 # seen through it would have to be both transparent and keep its colour.
 $acc = Get-Accessories $results
+# The base without accessories is another generation, around them about 15 lighter or darker than
+# the photo: matched to it outside them and diffused inside, otherwise the difference came onto
+# every cladding (a light haze around the vase on Graphit).
+$around = [Mapa]::Max([Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 4)), [Mapa]::Doplnok($acc.mimo))
+$acc.empty.Pripocitaj([Obr]::Vyrovnanie($acc.base, $acc.empty, $around, (Get-Px 7), 2000, 14), $ones)
 # Thin parts (the diffuser's reeds, "tenke"): light sticks on a light wall, the accessories' mask
 # drops them as specks and the empty scene has none. Inside their rectangles they are found by
 # colour (a difference to the base without accessories also takes the wall's texture) and pasted
@@ -210,13 +215,61 @@ $accNear = [Mapa]::Doplnok([Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 3)))   # pr
 # The original cladding keeps the photo around the accessories (the empty scene there is another
 # generation, with the accessories' own blotches); only the original products are replaced.
 $accKeep = [Mapa]::Doplnok([Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 8)))
+# Clear glass ("sklo", the vase): moved to the cladding as glass (Obr.Sklo). Moved like a wall only
+# where it is close to the base colour, it stayed a pale ghost of the light wall on Graphit, and
+# the green key of the vase is taller and narrower than the vase (the low threshold of the key
+# left the light wall above its neck).
+$glass = $null
+if ($n.sklo) {
+    $glass = [float[]]$ones.Clone()
+    [Mapa]::Oblast($glass, $W, $H, [double[]]$n.sklo)
+    $glass = [Mapa]::Rozmaz($glass, $W, $H, (Get-Px 1))
+}
+# Opaque parts close to the wall's colour ("nepriehladne", the diffuser's body with its label):
+# pasted as they are, moved like the wall the label turned grey on Graphit.
+$opaque = $null
+if ($n.nepriehladne) {
+    $opaque = [float[]]$ones.Clone()
+    [Mapa]::Oblast($opaque, $W, $H, [double[]]$n.nepriehladne)
+    $opaque = [Mapa]::Rozmaz($opaque, $W, $H, (Get-Px 1))
+}
+# Behind the original washbasin ("skryte", the diffuser's right part): the visible left half
+# mirrored about the axis "os" inside "obdlznik", where the original washbasin was. Without it the
+# other washbasins showed the diffuser cut along the original one's corner. Only the cladding
+# images get the part, the product layers still leave out just the visible accessories.
+$accPaste = $acc.nove
+$hidden = $null
+if ($n.skryte) {
+    $hidden = [Mapa]::Doplnok($acc.mimo)
+    [Mapa]::Oblast($hidden, $W, $H, [double[]]$n.skryte.obdlznik)
+    $q = [double[]]$n.skryte.obdlznik
+    $ax2 = 2 * [int]([double]$n.skryte.os * $W)
+    $flip = New-Object 'float[]' ($W * $H)
+    for ($y = [int]($q[1] * $H); $y -le [int]($q[3] * $H); $y++) {
+        for ($x = [int]($q[0] * $W); $x -le [int]($q[2] * $W); $x++) {
+            $i = $y * $W + $x
+            if ($hidden[$i] -le 0) { continue }
+            $j = $y * $W + $ax2 - $x
+            foreach ($im in $acc.base, $acc.empty) { $im.R[$i] = $im.R[$j]; $im.G[$i] = $im.G[$j]; $im.B[$i] = $im.B[$j] }
+            $flip[$i] = $acc.nove[$j] * $hidden[$i]
+        }
+    }
+    $hidden = $flip
+    $accPaste = [Mapa]::Max($acc.nove, $hidden)
+}
 $footprint = New-Object 'float[]' ($W * $H)
 function Add-Accessories($plate) {
     $low = $plate.Rozmaz((Get-Px 1))
     $obj = [Obr]::Prefarbi($acc.base, $acc.empty, $low, 25, 55)
-    if ($acc.kluc) { $obj.Prekry([Obr]::Prefarbi($acc.base, $acc.empty, $low, 18, 32), [Mapa]::Zuz($acc.kluc, $W, $H, (Get-Px 1))) }
+    if ($acc.kluc) {
+        $k = [Mapa]::Zuz($acc.kluc, $W, $H, (Get-Px 1))
+        if ($glass) { $k = [Mapa]::Min($k, [Mapa]::Doplnok($glass)) }
+        $obj.Prekry([Obr]::Prefarbi($acc.base, $acc.empty, $low, 18, 32), $k)
+    }
+    if ($glass) { $obj.Prekry([Obr]::Sklo($acc.base, $acc.empty, $low, 60, 100), $glass) }
+    if ($opaque) { $obj.Prekry($acc.base, $opaque) }
     if ($thin) { $obj.Prekry($acc.base, $thin) }
-    $plate.Prekry($obj, $acc.nove)
+    $plate.Prekry($obj, $accPaste)
 }
 $keys = @{}   # category id -> helper result with its original objects painted green
 foreach ($k in @($n.kluce)) { if ($results.Contains($k.id)) { $keys[$k.kategoria] = $k.id } else { Write-Warning "No result for $($k.id)" } }
@@ -329,6 +382,7 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
 $footprint = [Mapa]::Rozmaz($footprint, $W, $H, (Get-Px 2))
 $plate = $base.Kopia()
 $plate.Prekry((Get-Background $base $footprint), $footprint)
+if ($hidden) { $plate.Prekry($acc.base, $hidden) }
 $plate.UlozJpg((Join-Path $imgDir 'povodny.jpg'), 85)
 Save-Mask $footprint 'podklad-povodny'
 $plate = $null
