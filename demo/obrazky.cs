@@ -829,15 +829,23 @@ public static class Vrstva
     // little lower) with its top at the object's top edge in img: in every column, from just
     // below the wall above the key's top edge (the rows gap..2 gap above it) down, the first row
     // where img differs from that wall (max channel over prah), at most max rows below the key's
-    // top. The edge of a column is the median of the measured columns within okno pixels; columns
-    // [skip0, skip1) (a tap behind the object: no wall above it) and those without a measured
-    // neighbour are interpolated between the nearest edges on either side. Rows above the edge
+    // top. In columns [skip0, skip1) a tap may stand behind the object: a column there counts only
+    // if what is above the key's top has the colour of the wall on either side (within prah of
+    // the mean wall okno pixels beside the span, interpolated). The edge of a column is the median
+    // of the counted columns within okno pixels; the others are interpolated in height between
+    // the nearest edges on either side (interpolating the distance below the key's top put
+    // Savoy's rim behind the tap 3 px too high, with a strip of wall), and their gap rows from
+    // the edge down are solid. Rows above the edge
     // are cut off, rows between it and a lower key filled. Where the column's wall is known, the
     // edge's row and the one above it get the opacity of their colour between that wall and the
     // rim (the most different of the three rows from the edge down): anti-aliasing, and a column
     // whose edge is a pixel off the median gets it back. The median distance of the edge below
     // the key's top goes to presah.
-    public static float[] OrezKluc(Obr img, float[] key, int w, int h, int max, int gap, float prah, int skip0, int skip1, int okno, out int presah)
+    // In oprav (or null), the object's colour in those rows of the tap's columns (and gap columns
+    // beside them), with the edge's anti-aliasing, is interpolated from the columns on either side
+    // at the same depth below the edge: the old tap's dark foot on the rim stuck out beside a new
+    // tap standing a few pixels elsewhere.
+    public static float[] OrezKluc(Obr img, float[] key, int w, int h, int max, int gap, float prah, int skip0, int skip1, int okno, Obr oprav, out int presah)
     {
         const int NIC = int.MinValue;
         var top = new int[w];
@@ -852,23 +860,59 @@ public static class Vrstva
             e[x] = NIC;
             for (int y = 0; y < h; y++) if (key[y * w + x] > 0.5f) { top[x] = y; break; }
             int yk = top[x];
-            if (yk < 2 * gap || (x >= skip0 && x < skip1)) continue;
+            if (yk < 2 * gap) continue;
             float r = 0, g = 0, b = 0;
             for (int y = yk - 2 * gap; y < yk - gap; y++) { int i = y * w + x; r += img.R[i]; g += img.G[i]; b += img.B[i]; }
             r /= gap; g /= gap; b /= gap;
             wr[x] = r; wg[x] = g; wb[x] = b; wall[x] = true;
+            if (x >= skip0 && x < skip1) continue;   // measured once checked below
             for (int y = yk - gap + 1; y <= Math.Min(h - 1, yk + max); y++)
             {
                 int i = y * w + x;
                 if (Math.Max(Math.Abs(img.R[i] - r), Math.Max(Math.Abs(img.G[i] - g), Math.Abs(img.B[i] - b))) > prah) { e[x] = y - yk; break; }
             }
         }
+        if (skip1 > skip0)
+        {
+            // The wall beside the span; columns inside whose wall is another colour (the tap).
+            var side = new double[6];
+            int nl = 0, nr = 0;
+            for (int x = Math.Max(0, skip0 - okno); x < Math.Min(w, skip1 + okno); x++)
+            {
+                if ((x >= skip0 && x < skip1) || !wall[x]) continue;
+                int k = x < skip0 ? 0 : 3;
+                side[k] += wr[x]; side[k + 1] += wg[x]; side[k + 2] += wb[x];
+                if (x < skip0) nl++; else nr++;
+            }
+            for (int x = skip0; x < Math.Min(w, skip1); x++)
+            {
+                if (!wall[x]) continue;
+                if (nl == 0 || nr == 0) { wall[x] = false; continue; }
+                double t = (x - skip0 + 0.5) / (skip1 - skip0);
+                double sr = side[0] / nl + (side[3] / nr - side[0] / nl) * t, sg = side[1] / nl + (side[4] / nr - side[1] / nl) * t, sb = side[2] / nl + (side[5] / nr - side[2] / nl) * t;
+                if (Math.Max(Math.Abs(wr[x] - sr), Math.Max(Math.Abs(wg[x] - sg), Math.Abs(wb[x] - sb))) > prah) { wall[x] = false; continue; }
+                int yk = top[x];
+                for (int y = yk - gap + 1; y <= Math.Min(h - 1, yk + max); y++)
+                {
+                    int i = y * w + x;
+                    if (Math.Max(Math.Abs(img.R[i] - wr[x]), Math.Max(Math.Abs(img.G[i] - wg[x]), Math.Abs(img.B[i] - wb[x]))) > prah) { e[x] = y - yk; break; }
+                }
+            }
+        }
+        // The tap's columns, and gap columns beside them (the old tap's dark foot on the rim).
+        var tap = new bool[w];
+        for (int x = skip0; x < Math.Min(w, skip1); x++)
+        {
+            if (wall[x] || top[x] < 0) continue;
+            for (int j = Math.Max(0, x - gap); j <= Math.Min(w - 1, x + gap); j++) tap[j] = true;
+        }
+        for (int x = 0; x < w; x++) if (tap[x]) { e[x] = NIC; wall[x] = false; }
         var es = new float[w];
         var all = new System.Collections.Generic.List<int>();
         for (int x = 0; x < w; x++)
         {
             es[x] = float.NaN;
-            if (top[x] < 0) continue;
+            if (top[x] < 0 || tap[x]) continue;   // the tap's columns: interpolated
             var win = new System.Collections.Generic.List<int>();
             for (int j = Math.Max(0, x - okno); j <= Math.Min(w - 1, x + okno); j++) if (e[j] != NIC) win.Add(e[j]);
             if (win.Count == 0) continue;
@@ -884,19 +928,34 @@ public static class Vrstva
             int l = x - 1, rr = x + 1;
             while (l >= 0 && float.IsNaN(es[l])) l--;
             while (rr < w && float.IsNaN(es[rr])) rr++;
-            if (l >= 0 && rr < w) es[x] = es[l] + (es[rr] - es[l]) * (x - l) / (float)(rr - l);
-            else if (l >= 0) es[x] = es[l];
-            else if (rr < w) es[x] = es[rr];
+            if (l >= 0 && rr < w)
+            {
+                float yl = top[l] + es[l], yr = top[rr] + es[rr];
+                es[x] = yl + (yr - yl) * (x - l) / (float)(rr - l) - top[x];
+            }
+            else if (l >= 0) es[x] = top[l] + es[l] - top[x];
+            else if (rr < w) es[x] = top[rr] + es[rr] - top[x];
             else es[x] = 0;
         }
         var o = (float[])key.Clone();
+        var edge = new int[w];
         for (int x = 0; x < w; x++)
         {
+            edge[x] = -1;
             if (top[x] < 0) continue;
             int y0 = top[x];
             while (y0 > 0 && key[(y0 - 1) * w + x] > 0) y0--;   // the soft edge above the top
             int y1 = Math.Max(1, top[x] + (int)Math.Round(es[x]));
+            edge[x] = y1;
             for (int y = Math.Min(y0, y1); y < Math.Max(top[x], y1); y++) o[y * w + x] = y < y1 ? 0f : 1f;
+            if (tap[x])
+            {
+                // The tap's column: the model paints the key only partly over the old tap's foot,
+                // the rim there was translucent (the new tap's shadow showed through as grey).
+                for (int y = y1; y < Math.Min(h, y1 + gap); y++) o[y * w + x] = 1f;
+                edge[x] = -2;
+                continue;
+            }
             if (!wall[x]) continue;
             float dr = 0, dg = 0, db = 0, best = 0;
             for (int y = y1; y <= Math.Min(h - 1, y1 + 2); y++)
@@ -912,6 +971,28 @@ public static class Vrstva
                 int i = y * w + x;
                 float pr = ((img.R[i] - wr[x]) * dr + (img.G[i] - wg[x]) * dg + (img.B[i] - wb[x]) * db) / d2;
                 o[i] = Math.Min(1f, Math.Max(0f, pr));
+            }
+        }
+        if (oprav != null)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                if (edge[x] != -2) continue;
+                int l = x - 1, r = x + 1;
+                while (l >= 0 && edge[l] == -2) l--;
+                while (r < w && edge[r] == -2) r++;
+                if (l < 0 || r >= w || edge[l] < 0 || edge[r] < 0) continue;
+                int y1 = Math.Max(1, top[x] + (int)Math.Round(es[x]));
+                float t = (x - l) / (float)(r - l);
+                for (int d = -1; d < gap; d++)   // from the row of the edge's anti-aliasing above it
+                {
+                    if (y1 + d >= h || edge[l] + d >= h || edge[r] + d >= h) break;
+                    int i = (y1 + d) * w + x, il = (edge[l] + d) * w + l, ir = (edge[r] + d) * w + r;
+                    oprav.R[i] = oprav.R[il] + (oprav.R[ir] - oprav.R[il]) * t;
+                    oprav.G[i] = oprav.G[il] + (oprav.G[ir] - oprav.G[il]) * t;
+                    oprav.B[i] = oprav.B[il] + (oprav.B[ir] - oprav.B[il]) * t;
+                    if (d <= 0) o[i] = o[il] + (o[ir] - o[il]) * t;
+                }
             }
         }
         return o;

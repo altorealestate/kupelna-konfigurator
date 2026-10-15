@@ -259,7 +259,8 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
             $skip = @(0, 0)
             if ($kat.stlpec) { $skip = @([int]($kat.stlpec[0] * $W), [int]($kat.stlpec[1] * $W)) }
             $e = 0
-            $o = [Vrstva]::OrezKluc($img.Rozmaz(1), $key, $W, $H, (Get-Px 10), (Get-Px 3), 12, $skip[0], $skip[1], (Get-Px 10), [ref]$e)
+            $img = $img.Kopia()   # the rim behind the tap is retouched (the original's img is the base photo)
+            $o = [Vrstva]::OrezKluc($img.Rozmaz(1), $key, $W, $H, (Get-Px 10), (Get-Px 3), 12, $skip[0], $skip[1], (Get-Px 10), $img, [ref]$e)
             Write-Host "    $($s.id): key reaches about $e px above the object"
             # A tap behind the object: its column above the object's top edge is not this layer
             # (its outline and shadow there; the edge is found beside the column, lower than the
