@@ -20,7 +20,8 @@ import re
 import sys
 import time
 from pathlib import Path
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+from urllib.request import url2pathname
 
 import cv2
 import numpy as np
@@ -359,10 +360,13 @@ JS_READY = """() => [...document.images].filter(i => i.getAttribute('src') &&
   (!i.closest('#stage') || i.classList.contains('on') || i.classList.contains('base'))).every(i => i.complete)"""
 JS_BROKEN = """() => [...document.images].filter(i => i.getAttribute('src') && i.complete && i.naturalWidth === 0)
   .map(i => i.getAttribute('src'))"""
-JS_ALL_SRCS = """() => { const D = window.KUPELNA, s = new Set([D.povodny]);
-  for (const c of D.kategorie) for (const o of c.moznosti) {
-    if (o.obrazok) s.add(o.obrazok); if (o.nahlad) s.add(o.nahlad);
-    for (const l of Object.values(o.vrstvy || {})) for (const p of [].concat(l)) s.add(p.src); }
+JS_ALL_SRCS = """() => { const s = new Set();
+  // demo2 also carries the previous approach (KUPELNA_A) for its comparison switch
+  for (const D of [window.KUPELNA, window.KUPELNA_A].filter(Boolean)) {
+    s.add(D.povodny);
+    for (const c of D.kategorie) for (const o of c.moznosti) {
+      if (o.obrazok) s.add(o.obrazok); if (o.nahlad) s.add(o.nahlad);
+      for (const l of Object.values(o.vrstvy || {})) for (const p of [].concat(l)) s.add(p.src); } }
   return [...s]; }"""
 
 
@@ -411,7 +415,9 @@ def cmd_stranka(args):
                     missing.append(f'HTTP {status}: {s}')
             ctx.close()
         else:
-            missing = [f'missing file: {s}' for s in srcs if not (DEMO / s).is_file()]
+            # relative to the page (demo2 refers to ../demo/img too)
+            base = Path(url2pathname(urlparse(final_url).path)).parent
+            missing = [f'missing file: {s}' for s in srcs if not (base / s).resolve().is_file()]
         browser.close()
     for m in missing:
         print(f'  {m}')

@@ -29,8 +29,13 @@ function Read-Results {
     $results
 }
 
-function Save-Results($results) {
-    [IO.File]::WriteAllText($resultsPath, ($results | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
+# Writes the results $ids into vysledky.json as it is on disk now (two runs at once, e.g. from two
+# sessions, would otherwise drop each other's new results) and returns the merged results.
+function Save-Results($results, [string[]]$ids) {
+    $disk = Read-Results
+    foreach ($id in $ids) { $disk[$id] = $results[$id] }
+    [IO.File]::WriteAllText($resultsPath, ($disk | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding $false))
+    $disk
 }
 
 # An input image (base photo or a prepared input), already in the base frame.

@@ -93,6 +93,10 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | Pás za žľabom na tmavej dlažbe svetlejší a rozmazaný, na pravom konci tmavý zárez so svetlým rámom (používateľ 15. 10.) | celý pás sa vypĺňal riadkami spred žľabu posunutými nahor (odlesky, pri pravom konci rám zásteny); kov pôvodného žľabu mal mäkký okraj s jeho svetlou dlažbou | výplň len pod kovom pôvodného žľabu, inde vlastná dlažba generácie; kov pôvodného žľabu len pevná časť + 2 px |
 | Batéria na Graphite väčšia ako na ostatných obkladoch, svetlá páka | model pri dočistení batériu zväčšil (~1,2×) a páku prekreslil; jadro sa obnovuje len vnútri, tenká páka doň nepatrí | `Set-ScaledCleanup`: batéria zo vstupu generácie, zväčšený okraj nahradí uvoľnená stena |
 | Zvyšok starej misy vedľa Savoy (Travertine), schodík na polici (Graphite) | nie výrez doplnkov (pôvodný odhad), ale samotná AI: úzky pruh starej misy vedľa širokej Savoy nechala ako dizajn, pri tmavej stene prefarbila zadný okraj police do teplej | `pozadieZ`: miesto po starej mise mimo Savoy z výsledku užšieho okrúhleho umývadla na tom istom obklade; `polica` už od zadnej hrany police |
+| Výsledok `prazdna-scena` zmizol z `vysledky.json` (15. 10.) | dve session spustili `generuj.ps1` súčasne, druhá uložila celý svoj (starší) zoznam | `Save-Results` zapisuje len nové výsledky, zlúčené so stavom na disku; obrázok ostal vo `vystupy`, záznam sa doplnil bez generovania |
+| demo2: chrómový sifón takmer chýbal | v tieni pod policou má chróm tón steny, rozdiel voči prázdnej scéne ho nenašiel | zelený kľúč pôvodných batérií `kluc-baterie` |
+| demo2: béžová a hnedá aura, pás medzi tyčou a hadicou, ružový obdĺžnik pod policou (bronz) | stena generácie variantu je inak tónovaná ako prázdna scéna aj `prazdne-baterie` (čierna oranžová, bronz ružový), škáry a okraj vane o pár px inde; obrys z rozdielu zobral stenu | kľúč každého variantu (`<variant>#kluc`), stena z tej istej generácie, pozadie aj to, čo sedí s prázdnou scénou do ±9 px, opacita okraja projekciou, slabé okraje vo farbe predmetu |
+| demo2: svetlá linka pod umývadlom | rozmazanie pri výpočte tieňa roztieklo tmavý okraj misy na policu | tieň z rozmazania bez pixelov predmetu |
 
 ## 6. Zámerné rozhodnutia (nemeniť bez dohody)
 
@@ -101,7 +105,7 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 - Bronz = prefarbená čierna batéria (rovnaký tvar). Sprcha sa iba prefarbí.
 - Sifón a krytka prepadu majú farbu batérií. V katalógu nie sú, takže je to predpoklad, ktorý môže potvrdiť kolega.
 - Chrómová vzpera sklenenej zásteny ostáva chrómová (patrí k sklu, nie k Hansgrohe).
-- Stránka bez vysvetľujúcich textov, bez galérie testov a bez porovnania s pôvodnou.
+- Stránka bez vysvetľujúcich textov, bez galérie testov a bez porovnania s pôvodnou. Výnimka na požiadanie: `demo2` má prepínač Nový postup / Doterajší (porovnanie postupov pri tej istej zostave).
 
 ## 7. Otvorené chyby
 
@@ -118,6 +122,8 @@ Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už 
 - Okolo batérie na pôvodnom obklade je slabo svetlejší obdĺžnik (AI prekreslila stenu, vrstva ju čiastočne berie).
 - V okrúhlom umývadle je pod batériou na vnútornej stene misy svetlejší pás. Je tam aj s pôvodnou chrómovou batériou, nakreslil ho model pri generovaní umývadla.
 - Pri rozete sifónu na Graphite a Travertine slabý svetlý oblúk starej chrómovej rozety (viditeľný až pri ~3× zväčšení). Na Graphite pri 4× zväčšení tenký svetlý prúžok vľavo od tela umývadlovej batérie.
+- demo2: chróm (pôvodné batérie) odráža béžovú stenu pôvodnej vizualizácie, na Graphite je svetlejší a teplejší ako v doterajšom postupe a tenká hadica má slabý svetlý lem. Lesklý chróm nemôže byť jedna vrstva pre všetky obklady bez úpravy odrazu.
+- demo2: na pôvodnom obklade má stena v okolí predmetov textúru prázdnej scény (iná generácia), v tieni pod policou a pri lístkoch vázy je pôvodná zostava mierne iná ako pôvodná vizualizácia (priemerný rozdiel 2,2 z 255).
 
 ## 9. Prostredie
 

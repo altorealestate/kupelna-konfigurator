@@ -615,6 +615,138 @@ public static class Mapa
     }
 }
 
+// Layers of the new approach (zostav2.ps1): an object cut out of its own generation so that the
+// same layer fits every background (wall cladding).
+public static class Vrstva
+{
+    // One RGBA layer of the object in c, whose background bg is c without the object (the empty
+    // scene toned to c) and okraj the wall right behind its edge (from c itself: another
+    // generation's wall differs in tone):
+    // - the object (alfa) with its colour moved off the background it was generated on: an edge
+    //   pixel is c = a f + (1 - a) okraj, so f = okraj + (c - okraj) / a (a light wall would
+    //   otherwise stay as a halo around a dark object on a dark cladding); for a faint pixel that
+    //   extrapolation runs off (a slightly darker wall would turn brown), so towards alpha 0.6 and
+    //   below the object's own colour next to it (obj) is used,
+    // - under it its shadow: the darkening of c against bg (luma of both blurred by rs), ignored
+    //   below n0 (two generations never match exactly), full above n1, times the weight tien
+    //   (1 next to the object, 0 farther than the shadow reaches). The blur leaves the object out,
+    //   so its own dark edge does not read as a shadow next to it. A black pixel with alpha s
+    //   darkens any background by the factor 1 - s.
+    // Returns the alpha; the colour goes to farba.
+    public static float[] Zloz(Obr c, Obr bg, Obr okraj, Obr obj, float[] alfa, float[] tien, int rs, float n0, float n1, out Obr farba)
+    {
+        int n = c.R.Length;
+        var bl = okraj;
+        var mimo = new float[n];
+        for (int i = 0; i < n; i++) mimo[i] = 1f - Math.Min(1f, alfa[i] * 2f);
+        var cs = c.RozmazVazene(mimo, rs);
+        var bs = bg.RozmazVazene(mimo, rs);
+        var f = new Obr(c.W, c.H);
+        var o = new float[n];
+        Parallel.For(0, c.H, y =>
+        {
+            for (int i = y * c.W; i < (y + 1) * c.W; i++)
+            {
+                float s = 0;
+                if (tien[i] > 0)
+                {
+                    float yc = 0.299f * cs.R[i] + 0.587f * cs.G[i] + 0.114f * cs.B[i];
+                    float yb = 0.299f * bs.R[i] + 0.587f * bs.G[i] + 0.114f * bs.B[i];
+                    float k = 1f - Math.Min(1f, yc / Math.Max(1f, yb));
+                    k *= Math.Min(1f, Math.Max(0f, (k - n0) / (n1 - n0)));
+                    s = Math.Min(0.85f, k) * tien[i];
+                }
+                float a = alfa[i], A = a + (1 - a) * s;
+                o[i] = A;
+                if (a < 0.002f || A < 0.002f) continue;   // shadow only: black
+                float d = Math.Max(a, 0.6f), w = a / A, t = Math.Min(1f, Math.Max(0f, (a - 0.6f) / 0.4f));
+                f.R[i] = w * (t * Math.Min(255f, Math.Max(0f, bl.R[i] + (c.R[i] - bl.R[i]) / d)) + (1 - t) * obj.R[i]);
+                f.G[i] = w * (t * Math.Min(255f, Math.Max(0f, bl.G[i] + (c.G[i] - bl.G[i]) / d)) + (1 - t) * obj.G[i]);
+                f.B[i] = w * (t * Math.Min(255f, Math.Max(0f, bl.B[i] + (c.B[i] - bl.B[i]) / d)) + (1 - t) * obj.B[i]);
+            }
+        });
+        farba = f;
+        return o;
+    }
+
+    // Opacity of the object's edge: how far pixel c lies on the way from the wall behind it (wall)
+    // to the object's own colour next to it (obj), i.e. the projection of c - wall on obj - wall.
+    // A wall pixel gets 0 whatever its tone, an edge pixel its share of the object. Where object
+    // and wall have nearly the same colour (|obj - wall| below minDist, chrome reflecting the
+    // wall), the projection is noise and the pixel gets half of the outline.
+    public static float[] Alfa(Obr c, Obr wall, Obr obj, float[] outline, float minDist)
+    {
+        int n = outline.Length;
+        var a = new float[n];
+        for (int i = 0; i < n; i++)
+        {
+            if (outline[i] <= 0) continue;
+            float dr = obj.R[i] - wall.R[i], dg = obj.G[i] - wall.G[i], db = obj.B[i] - wall.B[i];
+            float d2 = dr * dr + dg * dg + db * db;
+            if (d2 < minDist * minDist) { a[i] = 0.5f * outline[i]; continue; }
+            float p = ((c.R[i] - wall.R[i]) * dr + (c.G[i] - wall.G[i]) * dg + (c.B[i] - wall.B[i]) * db) / d2;
+            a[i] = Math.Min(1f, Math.Max(0f, p)) * outline[i];
+        }
+        return a;
+    }
+
+    // The layer (colour f, alpha a) scaled by k about (sx, sy), which moves to (dx, dy); colour is
+    // scaled premultiplied, so its edges do not darken towards the black of transparent pixels.
+    public static float[] Mierka(Obr f, float[] a, double sx, double sy, double dx, double dy, double k, out Obr fs)
+    {
+        int w = f.W, h = f.H, n = a.Length;
+        var p = new Obr(w, h);
+        for (int i = 0; i < n; i++) { p.R[i] = f.R[i] * a[i]; p.G[i] = f.G[i] * a[i]; p.B[i] = f.B[i] * a[i]; }
+        var ps = p.Mierka(sx, sy, dx, dy, k);
+        var s = Mapa.Mierka(a, w, h, sx, sy, dx, dy, k);
+        for (int i = 0; i < n; i++)
+        {
+            float d = s[i] > 1e-4f ? 1f / s[i] : 0f;
+            ps.R[i] *= d; ps.G[i] *= d; ps.B[i] *= d;
+        }
+        fs = ps;
+        return s;
+    }
+
+    // Colour difference (max over channels) of a to b, the smallest over b shifted by up to r
+    // pixels in steps of `step`: edges a few pixels off (a bathtub rim, a joint) do not count.
+    public static float[] RozdielPosun(Obr a, Obr b, int r, int step)
+    {
+        int w = a.W, h = a.H;
+        var o = new float[w * h];
+        Parallel.For(0, h, y =>
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int i = y * w + x;
+                float best = float.MaxValue;
+                for (int dy = -r; dy <= r; dy += step)
+                {
+                    int yy = Math.Min(h - 1, Math.Max(0, y + dy));
+                    for (int dx = -r; dx <= r; dx += step)
+                    {
+                        int j = yy * w + Math.Min(w - 1, Math.Max(0, x + dx));
+                        float d = Math.Max(Math.Abs(a.R[i] - b.R[j]), Math.Max(Math.Abs(a.G[i] - b.G[j]), Math.Abs(a.B[i] - b.B[j])));
+                        if (d < best) best = d;
+                    }
+                }
+                o[i] = best;
+            }
+        });
+        return o;
+    }
+
+    // Mask moved by (dx, dy) pixels; uncovered pixels are 0.
+    public static float[] Posun(float[] m, int w, int h, int dx, int dy)
+    {
+        var o = new float[m.Length];
+        for (int y = Math.Max(0, dy); y < Math.Min(h, h + dy); y++)
+            for (int x = Math.Max(0, dx); x < Math.Min(w, w + dx); x++)
+                o[y * w + x] = m[(y - dy) * w + x - dx];
+        return o;
+    }
+}
+
 // Finds how a generated image is scaled and shifted against the image it was generated from.
 // At 4K the model re-frames the scene slightly (~0.5-1 % zoom, a few pixels of shift), which
 // would make layers from different generations not line up.

@@ -1,0 +1,279 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Konfigurátor kúpeľne ST1 – nový postup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+  /* Same showroom layout as demo/; adds a switch between this approach (products independent of
+     the cladding) and the previous one, with the same selection. */
+  :root {
+    --bg: #e8e7e3;
+    --surface: #f6f5f2;
+    --ink: #24221f;
+    --muted: #6c675f;
+    --line: #d2cfc8;
+    --accent: #8a6942;
+    --accent-ink: #ffffff;
+    --stage: #d6d3cc;
+    --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --font-ui: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+    --font-code: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --radius: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #191816; --surface: #23211f; --ink: #ece8e1; --muted: #a39d93; --line: #3a3733;
+      --accent: #c9a374; --accent-ink: #1b1713; --stage: #2b2926;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #191816; --surface: #23211f; --ink: #ece8e1; --muted: #a39d93; --line: #3a3733;
+    --accent: #c9a374; --accent-ink: #1b1713; --stage: #2b2926;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 var(--font-ui);
+    padding-inline: max(16px, 3vw); padding-block: 20px 56px;
+  }
+  .wrap { max-width: 1440px; margin: 0 auto; display: grid; gap: 40px; }
+  h1 { font-family: var(--font-display); font-weight: 600; line-height: 1.05; margin: 0; text-wrap: balance; font-size: clamp(2.1rem, 4vw, 3.1rem); }
+  h3 { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; margin: 0; }
+  .code { font-family: var(--font-code); font-size: 0.74rem; color: var(--muted); letter-spacing: 0.01em; }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Header */
+  header { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; justify-content: space-between; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 999px;
+    cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: border-color .15s, background .15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); padding: 2px; }
+  .seg button { border: 0; background: transparent; padding: 6px 13px; border-radius: 999px; cursor: pointer; font-size: 0.88rem; font-weight: 500; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  /* Configurator */
+  .config { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); gap: 28px; align-items: start; }
+  .viewer { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: grid; gap: 12px; min-width: 0; }
+  .stage {
+    position: relative; width: 100%; max-width: 100%; aspect-ratio: 4 / 3; overflow: hidden;
+    border-radius: var(--radius); background: var(--stage);
+  }
+  .stage .set { position: absolute; inset: 0; }
+  .stage .set[hidden] { display: none; }
+  .stage img { position: absolute; display: block; max-width: none; pointer-events: none; user-select: none; }
+  .stage .plate { inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .35s ease; }
+  .stage .plate.base, .stage .plate.on { opacity: 1; }
+  .stage .group { position: absolute; inset: 0; }
+  .stage .piece { opacity: 0; transition: opacity .35s ease; }
+  .stage .piece.on { opacity: 1; }
+
+  .board { display: grid; gap: 22px; min-width: 0; }
+  .cat { display: grid; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--line); min-width: 0; }
+  .cat:last-child { border-bottom: 0; }
+  .cat-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+  .cat-head .code { min-width: 0; overflow-wrap: anywhere; }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  .chip { position: relative; display: grid; gap: 6px; cursor: pointer; }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip .swatch {
+    aspect-ratio: 1; width: 100%; border-radius: 4px; overflow: hidden; background: #fff;
+    outline: 1px solid var(--line); outline-offset: -1px; transition: outline-color .15s, box-shadow .15s;
+  }
+  .chip .swatch img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .chip .name { font-size: 0.8rem; line-height: 1.25; }
+  .chip:hover .swatch { outline-color: var(--muted); }
+  .chip input:checked + .swatch { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chip input:checked ~ .name { font-weight: 600; }
+  .chip input:focus-visible + .swatch { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 35%, transparent); }
+
+  @media (max-width: 900px) {
+    .config { grid-template-columns: minmax(0, 1fr); }
+    .viewer { position: relative; top: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stage .plate, .stage .piece { transition: none; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Konfigurátor kúpeľne</h1>
+    <div class="actions">
+      <div class="seg" role="group" aria-label="Postup">
+        <button type="button" id="mode-B" aria-pressed="true" title="Produkty nezávislé od obkladu (B)">Nový postup</button>
+        <button type="button" id="mode-A" aria-pressed="false" title="Doterajší postup (A)">Doterajší</button>
+      </div>
+      <button class="btn" id="random" type="button">Náhodná zostava</button>
+      <button class="btn" id="reset" type="button">Pôvodná zostava</button>
+    </div>
+  </header>
+
+  <section class="config" id="konfigurator" aria-label="Konfigurátor">
+    <div class="viewer">
+      <div class="stage" id="stage" role="img" aria-label="Vizualizácia kúpeľne podľa zvolenej zostavy"></div>
+    </div>
+    <form class="board" id="board" onsubmit="return false"></form>
+  </section>
+</div>
+
+<script>/*DATA*/window.KUPELNA = {"sirka":3312,"vyska":2484,"povodny":"img/povodny.jpg","model":"gpt-image-2.5-sunburst","rozlisenie":"4K","kategorie":[{"id":"obklad","nazov":"Obklad stien","typ":"podklad","z":0,"moznosti":[{"id":"povodny","nazov":"Pôvodný obklad","kratko":"Pôvodný obklad","detail":"Svetlý kameň · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-obklad-povodny.jpg"},{"id":"obklad-calacatta","nazov":"Florim I CLASSICI Calacatta Gold","kratko":"Calacatta Gold","detail":"Florim I Classici · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-calacatta-0.jpg","obrazok":"img/obklad-calacatta.jpg"},{"id":"obklad-graphit","nazov":"Florim STONE LIFE Graphit","kratko":"Stone Life Graphit","detail":"Florim Stone Life · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-graphit-0.jpg","obrazok":"img/obklad-graphit.jpg"},{"id":"obklad-travertine","nazov":"Florim AUTHENTIC LUXE Gold Travertine","kratko":"Gold Travertine","detail":"Florim Authentic Luxe · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-travertine-0.jpg","obrazok":"img/obklad-travertine.jpg"}]},{"id":"dlazba","nazov":"Dlažba","typ":"plocha","z":1,"moznosti":[{"id":"povodny","nazov":"Pôvodná dlažba","kratko":"Pôvodná dlažba","detail":"Svetlý kameň · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-dlazba-povodny.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-povodny-0.png","x":104,"y":2133,"w":2214,"h":351}]}},{"id":"dlazba-graphite","nazov":"Florim STONE LIFE Graphite 600x600","kratko":"Stone Life Graphite","detail":"Florim Stone Life · mat 600 × 600 mm","nahlad":"../demo/img/ref-dlazba-graphite-0.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-graphite-0.png","x":104,"y":2133,"w":2214,"h":351}]}},{"id":"dlazba-amani","nazov":"Florim TIMELESS Amani Grey 600x600","kratko":"Timeless Amani Grey","detail":"Florim Timeless · mat 600 × 600 mm","nahlad":"../demo/img/ref-dlazba-amani-0.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-amani-0.png","x":109,"y":2133,"w":2209,"h":351}]}}]},{"id":"baterie","nazov":"Batérie","typ":"objekt","z":3,"moznosti":[{"id":"povodny","nazov":"Chróm (pôvodné)","kratko":"Chróm (pôvodné)","detail":"Hansgrohe chróm · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-baterie-povodny.jpg","vrstvy":{"*":[{"src":"img/baterie-povodny-0.png","x":635,"y":540,"w":354,"h":1227},{"src":"img/baterie-povodny-1.png","x":1632,"y":1440,"w":45,"h":104},{"src":"img/baterie-povodny-2.png","x":2288,"y":1445,"w":328,"h":615},{"src":"img/baterie-povodny-3.png","x":1620,"y":1706,"w":72,"h":201},{"src":"img/baterie-povodny-4.png","x":2996,"y":1912,"w":63,"h":99}]}},{"id":"baterie-black","nazov":"Hansgrohe Black matt (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)","kratko":"Black matt","detail":"Hansgrohe 24237670 · 73372670 · 13347670","nahlad":"../demo/img/ref-baterie-black-0.jpg","vrstvy":{"*":[{"src":"img/baterie-black-0.png","x":623,"y":530,"w":357,"h":1234},{"src":"img/baterie-black-1.png","x":1639,"y":1448,"w":62,"h":118},{"src":"img/baterie-black-2.png","x":2276,"y":1424,"w":337,"h":630},{"src":"img/baterie-black-3.png","x":1613,"y":1708,"w":89,"h":195},{"src":"img/baterie-black-4.png","x":2998,"y":1910,"w":62,"h":96}]}},{"id":"baterie-bronze","nazov":"Hansgrohe Brushed bronze (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)","kratko":"Brushed bronze","detail":"Hansgrohe 24237140 · 73372140 · 13347140","nahlad":"../demo/img/ref-baterie-bronze-0.jpg","vrstvy":{"*":[{"src":"img/baterie-bronze-0.png","x":623,"y":529,"w":356,"h":1238},{"src":"img/baterie-bronze-1.png","x":1640,"y":1448,"w":61,"h":118},{"src":"img/baterie-bronze-2.png","x":2274,"y":1425,"w":341,"h":630},{"src":"img/baterie-bronze-3.png","x":1613,"y":1708,"w":89,"h":193},{"src":"img/baterie-bronze-4.png","x":2999,"y":1910,"w":63,"h":96}]}}]},{"id":"umyvadlo","nazov":"Umývadlo","typ":"objekt","z":4,"moznosti":[{"id":"povodny","nazov":"Pôvodné obdĺžnikové","kratko":"Pôvodné obdĺžnikové","detail":"Na dosku · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-umyvadlo-povodny.jpg","vrstvy":{"*":[{"src":"img/umyvadlo-povodny-0.png","x":1394,"y":1531,"w":524,"h":144}]}},{"id":"umyvadlo-savoy","nazov":"Laufen Savoy 550x380 oválne","kratko":"Savoy oválne","detail":"Laufen H8129440001121 · 550 × 380 mm","nahlad":"../demo/img/ref-umyvadlo-savoy-0.jpg","vrstvy":{"*":[{"src":"img/umyvadlo-savoy-0.png","x":1416,"y":1498,"w":459,"h":181}]}},{"id":"umyvadlo-okruhle","nazov":"Laufen living SQ 380x380 okrúhle","kratko":"living SQ okrúhle","detail":"Laufen H8114350001121 · Ø 380 mm","nahlad":"../demo/img/ref-umyvadlo-okruhle-0.jpg","vrstvy":{"*":[{"src":"img/umyvadlo-okruhle-0.png","x":1456,"y":1507,"w":396,"h":171}]}}]},{"id":"zlab","nazov":"Sprchový žľab","typ":"objekt","z":2,"moznosti":[{"id":"povodny","nazov":"FlowLine Zero Nerez","kratko":"FlowLine Zero Nerez","detail":"Kaldewei FlowLine Zero · nerez","nahlad":"../demo/img/nahlad-zlab-povodny.jpg","vrstvy":{"*":[{"src":"../demo/img/zlab-povodny-0.png","x":507,"y":2139,"w":661,"h":38}]}},{"id":"zlab-grafit","nazov":"Kaldewei FlowLine Zero Grafit","kratko":"FlowLine Zero Grafit","detail":"Kaldewei FlowLine Zero · grafit","nahlad":"../demo/img/ref-zlab-grafit-0.jpg","vrstvy":{"*":[{"src":"../demo/img/zlab-grafit-0.png","x":494,"y":2130,"w":676,"h":48}]}}]}]};window.KUPELNA_A = {"sirka":3312,"vyska":2484,"povodny":"../demo/img/povodny.jpg","model":"gpt-image-2-5-flare-image-to-image","rozlisenie":"4K","kreditovZaObrazok":16,"kategorie":[{"id":"obklad","nazov":"Obklad stien","typ":"podklad","z":0,"moznosti":[{"id":"povodny","nazov":"Pôvodný obklad","kratko":"Pôvodný obklad","detail":"Svetlý kameň · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-obklad-povodny.jpg"},{"id":"obklad-calacatta","nazov":"Florim I CLASSICI Calacatta Gold","kratko":"Calacatta Gold","detail":"Florim I Classici · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-calacatta-0.jpg","obrazok":"../demo/img/obklad-calacatta.jpg"},{"id":"obklad-graphit","nazov":"Florim STONE LIFE Graphit","kratko":"Stone Life Graphit","detail":"Florim Stone Life · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-graphit-0.jpg","obrazok":"../demo/img/obklad-graphit.jpg"},{"id":"obklad-travertine","nazov":"Florim AUTHENTIC LUXE Gold Travertine","kratko":"Gold Travertine","detail":"Florim Authentic Luxe · gres 1200 × 2400 mm","nahlad":"../demo/img/ref-obklad-travertine-0.jpg","obrazok":"../demo/img/obklad-travertine.jpg"}]},{"id":"dlazba","nazov":"Dlažba","typ":"plocha","z":1,"moznosti":[{"id":"povodny","nazov":"Pôvodná dlažba","kratko":"Pôvodná dlažba","detail":"Svetlý kameň · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-dlazba-povodny.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-povodny-0.png","x":104,"y":2133,"w":2214,"h":351}]}},{"id":"dlazba-graphite","nazov":"Florim STONE LIFE Graphite 600x600","kratko":"Stone Life Graphite","detail":"Florim Stone Life · mat 600 × 600 mm","nahlad":"../demo/img/ref-dlazba-graphite-0.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-graphite-0.png","x":104,"y":2133,"w":2214,"h":351}]}},{"id":"dlazba-amani","nazov":"Florim TIMELESS Amani Grey 600x600","kratko":"Timeless Amani Grey","detail":"Florim Timeless · mat 600 × 600 mm","nahlad":"../demo/img/ref-dlazba-amani-0.jpg","vrstvy":{"*":[{"src":"../demo/img/dlazba-amani-0.png","x":109,"y":2133,"w":2209,"h":351}]}}]},{"id":"baterie","nazov":"Batérie","typ":"objekt","z":3,"moznosti":[{"id":"povodny","nazov":"Chróm (pôvodné)","kratko":"Chróm (pôvodné)","detail":"Hansgrohe chróm · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-baterie-povodny.jpg"},{"id":"baterie-black","nazov":"Hansgrohe Black matt (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)","kratko":"Black matt","detail":"Hansgrohe 24237670 · 73372670 · 13347670","nahlad":"../demo/img/ref-baterie-black-0.jpg","vrstvy":{"povodny":[{"src":"../demo/img/baterie-black--povodny-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-black--povodny-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-black--povodny-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-black--povodny-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-black--povodny-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-calacatta":[{"src":"../demo/img/baterie-black--obklad-calacatta-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-black--obklad-calacatta-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-black--obklad-calacatta-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-black--obklad-calacatta-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-black--obklad-calacatta-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-graphit":[{"src":"../demo/img/baterie-black--obklad-graphit-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-black--obklad-graphit-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-black--obklad-graphit-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-black--obklad-graphit-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-black--obklad-graphit-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-travertine":[{"src":"../demo/img/baterie-black--obklad-travertine-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-black--obklad-travertine-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-black--obklad-travertine-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-black--obklad-travertine-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-black--obklad-travertine-4.png","x":2929,"y":1848,"w":202,"h":228}]}},{"id":"baterie-bronze","nazov":"Hansgrohe Brushed bronze (Pulsify S Showerpipe 260, Tecturis S 240 Fine, Ecostat Element)","kratko":"Brushed bronze","detail":"Hansgrohe 24237140 · 73372140 · 13347140","nahlad":"../demo/img/ref-baterie-bronze-0.jpg","vrstvy":{"povodny":[{"src":"../demo/img/baterie-bronze--povodny-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-bronze--povodny-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-bronze--povodny-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-bronze--povodny-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-bronze--povodny-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-calacatta":[{"src":"../demo/img/baterie-bronze--obklad-calacatta-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-bronze--obklad-calacatta-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-bronze--obklad-calacatta-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-bronze--obklad-calacatta-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-bronze--obklad-calacatta-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-graphit":[{"src":"../demo/img/baterie-bronze--obklad-graphit-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-bronze--obklad-graphit-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-bronze--obklad-graphit-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-bronze--obklad-graphit-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-bronze--obklad-graphit-4.png","x":2929,"y":1848,"w":202,"h":228}],"obklad-travertine":[{"src":"../demo/img/baterie-bronze--obklad-travertine-0.png","x":494,"y":395,"w":600,"h":1494},{"src":"../demo/img/baterie-bronze--obklad-travertine-1.png","x":1538,"y":1314,"w":235,"h":277},{"src":"../demo/img/baterie-bronze--obklad-travertine-2.png","x":2217,"y":1314,"w":500,"h":774},{"src":"../demo/img/baterie-bronze--obklad-travertine-3.png","x":1571,"y":1643,"w":169,"h":308},{"src":"../demo/img/baterie-bronze--obklad-travertine-4.png","x":2929,"y":1848,"w":202,"h":228}]}}]},{"id":"umyvadlo","nazov":"Umývadlo","typ":"objekt","z":4,"moznosti":[{"id":"povodny","nazov":"Pôvodné obdĺžnikové","kratko":"Pôvodné obdĺžnikové","detail":"Na dosku · podľa vizualizácie ST1","nahlad":"../demo/img/nahlad-umyvadlo-povodny.jpg"},{"id":"umyvadlo-savoy","nazov":"Laufen Savoy 550x380 oválne","kratko":"Savoy oválne","detail":"Laufen H8129440001121 · 550 × 380 mm","nahlad":"../demo/img/ref-umyvadlo-savoy-0.jpg","vrstvy":{"povodny":[{"src":"../demo/img/umyvadlo-savoy--povodny-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-calacatta":[{"src":"../demo/img/umyvadlo-savoy--obklad-calacatta-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-graphit":[{"src":"../demo/img/umyvadlo-savoy--obklad-graphit-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-travertine":[{"src":"../demo/img/umyvadlo-savoy--obklad-travertine-0.png","x":1322,"y":1364,"w":700,"h":376}]}},{"id":"umyvadlo-okruhle","nazov":"Laufen living SQ 380x380 okrúhle","kratko":"living SQ okrúhle","detail":"Laufen H8114350001121 · Ø 380 mm","nahlad":"../demo/img/ref-umyvadlo-okruhle-0.jpg","vrstvy":{"povodny":[{"src":"../demo/img/umyvadlo-okruhle--povodny-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-calacatta":[{"src":"../demo/img/umyvadlo-okruhle--obklad-calacatta-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-graphit":[{"src":"../demo/img/umyvadlo-okruhle--obklad-graphit-0.png","x":1322,"y":1364,"w":700,"h":376}],"obklad-travertine":[{"src":"../demo/img/umyvadlo-okruhle--obklad-travertine-0.png","x":1322,"y":1364,"w":700,"h":376}]}}]},{"id":"zlab","nazov":"Sprchový žľab","typ":"objekt","z":2,"moznosti":[{"id":"povodny","nazov":"FlowLine Zero Nerez","kratko":"FlowLine Zero Nerez","detail":"Kaldewei FlowLine Zero · nerez","nahlad":"../demo/img/nahlad-zlab-povodny.jpg","vrstvy":{"*":[{"src":"../demo/img/zlab-povodny-0.png","x":507,"y":2139,"w":661,"h":38}]}},{"id":"zlab-grafit","nazov":"Kaldewei FlowLine Zero Grafit","kratko":"FlowLine Zero Grafit","detail":"Kaldewei FlowLine Zero · grafit","nahlad":"../demo/img/ref-zlab-grafit-0.jpg","vrstvy":{"*":[{"src":"../demo/img/zlab-grafit-0.png","x":494,"y":2130,"w":676,"h":48}]}}]}]};/*/DATA*/</script>
+<script>
+(function () {
+  const SETS = { B: window.KUPELNA, A: window.KUPELNA_A };
+  if (!SETS.B) { document.getElementById('stage').textContent = 'Chýbajú dáta – spustite demo\\zostav2.ps1.'; return; }
+  if (!SETS.A) delete SETS.A;
+
+  const el = (tag, props = {}, ...kids) => {
+    const n = Object.assign(document.createElement(tag), props);
+    for (const k of kids) if (k != null) n.append(k);
+    return n;
+  };
+  const cats = SETS.B.kategorie;
+  const plateCat = cats.find(c => c.typ === 'podklad');
+  const sel = Object.fromEntries(cats.map(c => [c.id, 'povodny']));
+  const pct = (v, total) => (v / total * 100) + '%';
+  const show = img => { if (!img.getAttribute('src')) img.src = img.dataset.src; };
+
+  // --- Stage: one set of images per approach; only the shown one is loaded first ----------
+  const stage = document.getElementById('stage');
+  stage.style.aspectRatio = `${SETS.B.sirka} / ${SETS.B.vyska}`;
+  function buildSet(D) {
+    const root = el('div', { className: 'set', hidden: true });
+    stage.append(root);
+    const plates = {};
+    for (const o of D.kategorie.find(c => c.typ === 'podklad').moznosti) {
+      const img = el('img', { alt: '', className: 'plate', decoding: 'async' });
+      img.dataset.src = o.id === 'povodny' ? D.povodny : o.obrazok;
+      if (o.id === 'povodny') img.classList.add('base');
+      img.style.zIndex = o.id === 'povodny' ? 0 : 1;
+      root.append(img);
+      plates[o.id] = img;
+    }
+    const pieces = new Map();   // src -> img
+    const fixed = [];
+    const addPieces = (list, group) => {
+      for (const p of list || []) {
+        if (pieces.has(p.src)) continue;
+        const img = el('img', { alt: '', className: 'piece', decoding: 'async' });
+        img.dataset.src = p.src;
+        Object.assign(img.style, { left: pct(p.x, D.sirka), top: pct(p.y, D.vyska), width: pct(p.w, D.sirka), height: pct(p.h, D.vyska) });
+        group.append(img);
+        pieces.set(p.src, img);
+      }
+    };
+    for (const c of D.kategorie.filter(c => c.typ !== 'podklad')) {
+      const group = el('div', { className: 'group' });
+      group.style.zIndex = 10 + c.z;
+      root.append(group);
+      for (const o of c.moznosti) for (const list of Object.values(o.vrstvy || {})) addPieces(list, group);
+    }
+    for (const f of D.pevne || []) {
+      const group = el('div', { className: 'group' });
+      group.style.zIndex = 10 + f.z;
+      root.append(group);
+      addPieces(f.vrstvy, group);
+      fixed.push(...f.vrstvy.map(p => p.src));
+    }
+    return { D, root, plates, pieces, fixed };
+  }
+  const sets = Object.fromEntries(Object.entries(SETS).map(([k, D]) => [k, buildSet(D)]));
+  let mode = 'B';
+
+  function wanted(s) {
+    const out = new Set(s.fixed);
+    for (const c of s.D.kategorie.filter(c => c.typ !== 'podklad')) {
+      const o = c.moznosti.find(o => o.id === sel[c.id]);
+      if (!o || !o.vrstvy) continue;
+      for (const p of o.vrstvy[sel[plateCat.id]] || o.vrstvy['*'] || []) out.add(p.src);
+    }
+    return out;
+  }
+
+  // --- Sample board ------------------------------------------------------------
+  const board = document.getElementById('board');
+  const headCodes = {};
+  for (const c of cats) {
+    const fs = el('div', { className: 'cat', role: 'radiogroup' });
+    fs.setAttribute('aria-labelledby', `h-${c.id}`);
+    const code = el('span', { className: 'code' });
+    headCodes[c.id] = code;
+    fs.append(el('div', { className: 'cat-head' }, el('h3', { textContent: c.nazov, id: `h-${c.id}` }), code));
+    const chips = el('div', { className: 'chips' });
+    for (const o of c.moznosti) {
+      const input = el('input', { type: 'radio', name: c.id, value: o.id, id: `o-${c.id}-${o.id}`, checked: o.id === 'povodny' });
+      input.addEventListener('change', () => { sel[c.id] = o.id; render(); });
+      chips.append(el('label', { className: 'chip', htmlFor: input.id, title: o.nazov },
+        input,
+        el('span', { className: 'swatch' }, el('img', { src: o.nahlad, alt: '', loading: 'lazy' })),
+        el('span', { className: 'name', textContent: o.kratko || o.nazov })));
+    }
+    fs.append(chips);
+    board.append(fs);
+  }
+
+  function render() {
+    for (const [k, s] of Object.entries(sets)) {
+      const active = k === mode;
+      s.root.hidden = !active;
+      if (!active) continue;
+      for (const [id, img] of Object.entries(s.plates)) {
+        const on = id === sel[plateCat.id];
+        if (on || id === 'povodny') show(img);
+        img.classList.toggle('on', on);
+      }
+      const want = wanted(s);
+      for (const [src, img] of s.pieces) {
+        if (want.has(src)) show(img);
+        img.classList.toggle('on', want.has(src));
+      }
+    }
+    for (const c of cats) {
+      const o = c.moznosti.find(o => o.id === sel[c.id]);
+      headCodes[c.id].textContent = o.detail || '';
+      const radio = document.getElementById(`o-${c.id}-${o.id}`);
+      if (radio && !radio.checked) radio.checked = true;
+    }
+    for (const k of ['A', 'B']) {
+      const b = document.getElementById(`mode-${k}`);
+      b.setAttribute('aria-pressed', String(k === mode));
+      b.disabled = !sets[k];
+    }
+  }
+
+  // --- Actions -----------------------------------------------------------------
+  const setMode = k => { if (sets[k]) { mode = k; render(); } };
+  document.getElementById('mode-A').addEventListener('click', () => setMode('A'));
+  document.getElementById('mode-B').addEventListener('click', () => setMode('B'));
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, textarea')) return;
+    if (e.key === 'a' || e.key === 'A') setMode('A');
+    else if (e.key === 'b' || e.key === 'B') setMode('B');
+  });
+  document.getElementById('reset').addEventListener('click', () => { for (const c of cats) sel[c.id] = 'povodny'; render(); });
+  document.getElementById('random').addEventListener('click', () => {
+    for (const c of cats) sel[c.id] = c.moznosti[Math.floor(Math.random() * c.moznosti.length)].id;
+    render();
+  });
+
+  render();
+
+  // Preload the rest, three images at a time: this approach first, then the previous one.
+  const rest = ['B', 'A'].filter(k => sets[k]).flatMap(k => [...Object.values(sets[k].plates), ...sets[k].pieces.values()]);
+  const next = () => {
+    const img = rest.find(i => !i.getAttribute('src'));
+    if (!img) return;
+    img.addEventListener('load', next, { once: true });
+    img.addEventListener('error', next, { once: true });
+    show(img);
+  };
+  window.addEventListener('load', () => { for (let i = 0; i < 3; i++) next(); });
+})();
+</script>

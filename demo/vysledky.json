@@ -507,5 +507,103 @@
                                                      ],
                                       "zhoda":  0.958,
                                       "cenaUsd":  0.0878
-                                  }
+                                  },
+    "prazdna-scena":  {
+                          "subor":  "vystupy\\20261015-101712_6b8b2234_1.png",
+                          "taskId":  "req_6b8b223465b647849a863e6cfac3f921",
+                          "sekund":  54.3,
+                          "vstup":  "vystupy\\vstupy\\prazdna-scena.jpg",
+                          "zarovnanie":  [
+                                             1.00006,
+                                             0.99794,
+                                             0.5,
+                                             -0.62
+                                         ],
+                          "zhoda":  0.894,
+                          "cenaUsd":  0.1461
+                      },
+    "prazdna-scena@obklad-graphit":  {
+                                         "subor":  "vystupy\\20261015-102104_a6fff558_1.png",
+                                         "taskId":  "req_a6fff558fda140aab5e4fa4e04d28747",
+                                         "sekund":  44,
+                                         "vstup":  "vystupy\\vstupy\\prazdna-scena@obklad-graphit.jpg",
+                                         "zarovnanie":  [
+                                                            0.99937,
+                                                            0.99944,
+                                                            -0.38,
+                                                            -1
+                                                        ],
+                                         "zhoda":  0.743,
+                                         "cenaUsd":  0.0885
+                                     },
+    "prazdna-scena@obklad-calacatta":  {
+                                           "subor":  "vystupy\\20261015-103101_2d828958_1.png",
+                                           "taskId":  "req_2d828958ee9f48a3a06d45e053fe9ed6",
+                                           "sekund":  47.2,
+                                           "vstup":  "vystupy\\vstupy\\prazdna-scena@obklad-calacatta.jpg",
+                                           "zarovnanie":  [
+                                                              0.99956,
+                                                              0.99944,
+                                                              0.25,
+                                                              -0.88
+                                                          ],
+                                           "zhoda":  0.873,
+                                           "cenaUsd":  0.0885
+                                       },
+    "prazdna-scena@obklad-travertine":  {
+                                            "subor":  "vystupy\\20261015-103100_1849f56d_1.png",
+                                            "taskId":  "req_1849f56d00b24aa5b2134751897a53c2",
+                                            "sekund":  45.6,
+                                            "vstup":  "vystupy\\vstupy\\prazdna-scena@obklad-travertine.jpg",
+                                            "zarovnanie":  [
+                                                               0.9995,
+                                                               0.99875,
+                                                               -0.25,
+                                                               -0.75
+                                                           ],
+                                            "zhoda":  0.885,
+                                            "cenaUsd":  0.0885
+                                        },
+    "kluc-baterie":  {
+                         "subor":  "vystupy\\20261015-104210_f5749b7c_1.png",
+                         "taskId":  "req_f5749b7cb01d4c3e9268f642910415d4",
+                         "sekund":  53.6,
+                         "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
+                         "zarovnanie":  [
+                                            0.99994,
+                                            0.99844,
+                                            -0.25,
+                                            -0.62
+                                        ],
+                         "zhoda":  0.866,
+                         "cenaUsd":  0.1453
+                     },
+    "baterie-black#kluc":  {
+                               "subor":  "vystupy\\20261015-112248_2f313c67_1.png",
+                               "taskId":  "req_2f313c67fc6d402cab0a15140a62693f",
+                               "sekund":  49.6,
+                               "vstup":  "vystupy\\vstupy\\baterie-black#kluc.jpg",
+                               "zarovnanie":  [
+                                                  0.99981,
+                                                  0.9985,
+                                                  0.5,
+                                                  -1
+                                              ],
+                               "zhoda":  0.89,
+                               "cenaUsd":  0.1455
+                           },
+    "baterie-bronze#kluc":  {
+                                "subor":  "vystupy\\20261015-112252_1a392e98_1.png",
+                                "taskId":  "req_1a392e986d9e417ab14ea01727306155",
+                                "sekund":  52.5,
+                                "vstup":  "vystupy\\vstupy\\baterie-bronze#kluc.jpg",
+                                "zarovnanie":  [
+                                                   0.99994,
+                                                   0.99831,
+                                                   0.25,
+                                                   -1
+                                               ],
+                                "zhoda":  0.893,
+                                "cenaUsd":  0.1455
+                            }
 }

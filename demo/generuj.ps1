@@ -16,7 +16,10 @@
     against the category's helper image without objects, "prazdny", or a copy in which the
     model painted the object pure green, "<variant>#kluc"), pasted onto every wall-cladding
     result, and the model only cleans up around it ("<variant>@<obklad>"). The object
-    therefore keeps its size and position on every cladding.
+    therefore keeps its size and position on every cladding,
+  - the new approach ("nezavisle", demo2 via zostav2.ps1): the base photo without any object,
+    every cladding generated once on it and green keys of the products; only when -Ids names
+    them.
 
 .EXAMPLE
   & .\demo\generuj.ps1                                    # everything that has no result yet
@@ -89,6 +92,30 @@ if ($cfg.zrkadlo) {
         $tasks += [pscustomobject]@{ id = "$($cfg.zrkadlo.id)@$($o.id)"; prompt = $cfg.zrkadlo.prompt; refs = $refs; deps = @($src); typ = 'zVariantu'; zdroj = $src; kat = $null }
     }
 }
+if ($cfg.nezavisle) {
+    # New approach (demo2): the base photo without any object, and every cladding generated once on
+    # it. Only generated when -Ids names them, never as part of "everything that has no result".
+    $n = $cfg.nezavisle
+    $deps = @($cfg.kategorie | Where-Object { $_.prazdny } | ForEach-Object { $_.prazdny })
+    if ($cfg.doplnky) { $deps += $cfg.doplnky.prazdny }
+    $tasks += [pscustomobject]@{ id = $n.prazdna; prompt = $n.prompt; refs = @(); deps = $deps; typ = 'prazdna'; explicitne = $true }
+    # The original objects painted green, where they barely differ from the wall (chrome in shadow).
+    foreach ($k in @($n.kluce)) {
+        $tasks += [pscustomobject]@{ id = $k.id; prompt = $k.prompt; refs = @(); deps = @(); typ = 'podklad'; explicitne = $true }
+    }
+    # Every variant of these categories painted green too: its generation's wall drifts in tone
+    # (the bronze one pink under the shelf), a difference does not find the object reliably.
+    foreach ($p in @($n.promptKluc.PSObject.Properties)) {
+        foreach ($v in @($cfg.varianty | Where-Object { $_.kategoria -eq $p.Name })) {
+            $kat = $cfg.kategorie | Where-Object { $_.id -eq $p.Name }
+            $tasks += [pscustomobject]@{ id = "$($v.id)#kluc"; prompt = $p.Value.Replace('{popis}', $v.popis); refs = @(); deps = @($v.id); typ = 'zVariantu'; zdroj = $v.id; kat = $kat; explicitne = $true }
+        }
+    }
+    foreach ($o in $plates) {
+        $refs = @($o.referencie | ForEach-Object { Join-Path $root $_ })
+        $tasks += [pscustomobject]@{ id = "$($n.prazdna)@$($o.id)"; prompt = $n.promptObklad; refs = $refs; deps = @($n.prazdna); typ = 'zVariantu'; zdroj = $n.prazdna; kat = $null; explicitne = $true }
+    }
+}
 foreach ($v in $cfg.varianty) {
     $kat = $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria }
     $refs = @($v.referencie | ForEach-Object { Join-Path $root $_ })
@@ -115,7 +142,7 @@ foreach ($v in $cfg.varianty) {
 $waiting = New-Object System.Collections.ArrayList
 foreach ($t in $tasks) {
     $id = $t.id
-    $match = -not $Ids -or @($Ids | Where-Object { $id -like $_ }).Count -gt 0
+    $match = (-not $Ids -and -not $t.explicitne) -or @($Ids | Where-Object { $id -like $_ }).Count -gt 0
     if ($match -and ($Force -or -not $results.Contains($t.id))) { [void]$waiting.Add($t) }
 }
 if ($waiting.Count -eq 0) { Write-Host 'Nothing to generate.'; return }
@@ -174,6 +201,24 @@ function New-TaskInput($t) {
     switch ($t.typ) {
         'podklad' { return $cfg.podklad }
         'zVariantu' { $img = Get-Aligned $results $t.zdroj $t.kat }
+        'prazdna' {
+            # The base photo with the helper images without objects pasted where the objects were
+            # (taps; shelf accessories), toned to the photo around them; the model removes the rest.
+            $img = Get-Input $cfg.podklad
+            $parts = @(foreach ($kat in @($cfg.kategorie | Where-Object { $_.prazdny })) {
+                @{ id = $kat.prazdny; kat = $kat; mask = (Get-OldObjects $results $kat) }
+            })
+            if ($cfg.doplnky) {
+                # With the outlines of the clear glass from the key (the difference misses them).
+                $parts += @{ id = $cfg.doplnky.prazdny; kat = $cfg.doplnky; mask = (Get-Accessories $results).erase }
+            }
+            foreach ($p in $parts) {
+                $mask = [Mapa]::Rozmaz([Mapa]::Rozsir($p.mask, $W, $H, (Get-Px 4)), $W, $H, (Get-Px 2))
+                $patch = Get-Aligned $results $p.id $p.kat
+                $patch.Pripocitaj([Obr]::Vyrovnanie($img, $patch, $mask, (Get-Px 7), 2000, 14), $mask)
+                $img.Prekry($patch, $mask)
+            }
+        }
         'naObklad' {
             $img = Get-Aligned $results $t.o.id
             $obj = Get-Aligned $results $t.v.id $t.kat
@@ -262,6 +307,7 @@ while ($waiting.Count -gt 0) {
         }
         Remove-Job $job
     }
-    Save-Results $results
+    # Merged into the file as it is now: another run may have saved its own results meanwhile.
+    $results = Save-Results $results @($jobs | ForEach-Object { $_.Name } | Where-Object { $results.Contains($_) })
     foreach ($t in $ready) { $waiting.Remove($t) }
 }

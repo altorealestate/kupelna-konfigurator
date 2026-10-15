@@ -15,6 +15,16 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 - Sprcha v ST1 je Hansgrohe Pulsify S 260 v chróme, čierna a bronzová sa preto iba prefarbí. Umývadlá majú v prompte rozmer voči pôvodnému Laufen living SQ 600 × 340 mm.
 - Ide o orientačný náhľad. Finálnu vizualizáciu zostavy, ktorú si klient vyberie, je lepšie vygenerovať naraz.
 
+## Nový postup: produkty nezávislé od obkladu
+
+**Porovnanie:** https://altorealestate.github.io/kupelna-konfigurator/demo2/ (prepínač Nový postup / Doterajší pri tej istej zostave)
+
+Pri celom katalógu (desiatky obkladov) by doterajší postup potreboval 7 generácií na každý obklad. V novom postupe:
+
+- AI raz odstráni z vizualizácie batérie, umývadlo, sifón a doplnky (prázdna scéna) a každý obklad sa generuje raz na nej, aj s odrazom v zrkadle. Na obklad teda 1 generácia (2K, ≈ $0,09).
+- Každý produkt sa z vlastnej generácie vyreže raz, aj s tieňom, a tá istá vrstva sa použije na všetkých obkladoch. Obrys dáva zelený kľúč (AI natrie produkt na zeleno), farba okrajov sa očistí od steny, na ktorej vznikol. Na produkt 1 generácia + kľúč, nezávisle od počtu obkladov.
+- Pilot na ST1: 7 generácií za $0,85, 22 súborov, 4,4 MB (doterajšie demo 76 súborov).
+
 ## Štruktúra
 
 | Súbor | Účel |
@@ -27,6 +37,8 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 | `demo/zostav.ps1`, `demo/obrazky.cs` | Zarovnanie, skladanie vrstiev a dát do stránky (zadarmo) |
 | `demo/spolocne.ps1` | Spoločné funkcie oboch skriptov (zarovnanie, masky) |
 | `demo/kontrola.py` | Kontrolné hárky generácií a zostavy, screenshoty stránky, kontrola obrázkov (zadarmo) |
+| `demo2/index.html`, `demo2/img/` | Stránka nového postupu s prepínačom na doterajší (dlažbu, žľab a náhľady berie z `demo/`) |
+| `demo/zostav2.ps1` | Vrstvy nového postupu a dáta do `demo2/index.html` (spúšťať po `zostav.ps1`) |
 | `openai-image.ps1` | Volanie OpenAI Images API (úprava obrázka, uloženie výsledku a jeho ceny) |
 | `kie-image.ps1` | Staršie volanie kie.ai (upload, úloha, stiahnutie výsledku) |
 
