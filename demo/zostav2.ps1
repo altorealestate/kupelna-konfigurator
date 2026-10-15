@@ -358,7 +358,20 @@ $html = [IO.File]::ReadAllText($indexPath, [Text.Encoding]::UTF8)
 $pattern = '(?s)(/\*DATA\*/).*?(/\*/DATA\*/)'
 if ($html -notmatch $pattern) { throw 'demo2\index.html has no /*DATA*/ ... /*/DATA*/ block.' }
 $data = "window.KUPELNA = $($new | ConvertTo-Json -Depth 12 -Compress);window.KUPELNA_A = $($old | ConvertTo-Json -Depth 12 -Compress);"
-$html = [regex]::Replace($html, $pattern, { param($x) $x.Groups[1].Value + $data + $x.Groups[2].Value })
+# Every image URL gets a version from its content: file names stay the same between runs, and the
+# page loads layers only when shown, so after an update the browser (Pages: max-age 600) kept old ones.
+$md5 = [Security.Cryptography.MD5]::Create()
+$versions = @{}
+$data = [regex]::Replace($data, '"((?:\.\./demo/)?img/[^"?]+)"', {
+    param($x)
+    $rel = $x.Groups[1].Value
+    if (-not $versions.ContainsKey($rel)) {
+        $bytes = [IO.File]::ReadAllBytes([IO.Path]::GetFullPath((Join-Path $outDir ($rel -replace '/', '\'))))
+        $versions[$rel] = -join ($md5.ComputeHash($bytes)[0..3] | ForEach-Object { $_.ToString('x2') })
+    }
+    '"' + $rel + '?v=' + $versions[$rel] + '"'
+})
+$html =[regex]::Replace($html, $pattern, { param($x) $x.Groups[1].Value + $data + $x.Groups[2].Value })
 [IO.File]::WriteAllText($indexPath, $html, (New-Object Text.UTF8Encoding $false))
 Write-Host 'demo2\index.html data updated.'
 

@@ -415,9 +415,9 @@ def cmd_stranka(args):
                     missing.append(f'HTTP {status}: {s}')
             ctx.close()
         else:
-            # relative to the page (demo2 refers to ../demo/img too)
+            # relative to the page (demo2 refers to ../demo/img too, with a ?v= content version)
             base = Path(url2pathname(urlparse(final_url).path)).parent
-            missing = [f'missing file: {s}' for s in srcs if not (base / s).resolve().is_file()]
+            missing = [f'missing file: {s}' for s in srcs if not (base / s.split('?')[0]).resolve().is_file()]
         browser.close()
     for m in missing:
         print(f'  {m}')
