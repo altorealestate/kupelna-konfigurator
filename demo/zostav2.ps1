@@ -49,6 +49,20 @@ function Get-Rects([double[]]$q, [double]$grow) {
     , $m
 }
 
+# Fills the rectangle q (normalized) of img row by row, linearly between the means of the 2 px left
+# and right of it (a smooth surface keeps its shading from top to bottom).
+function Set-Retouch($img, [double[]]$q) {
+    $x0 = [int]($q[0] * $W); $y0 = [int]($q[1] * $H); $x1 = [int]($q[2] * $W); $y1 = [int]($q[3] * $H)
+    foreach ($ch in $img.R, $img.G, $img.B) {
+        for ($y = $y0; $y -le $y1; $y++) {
+            $i = $y * $W
+            $a = ($ch[$i + $x0 - 2] + $ch[$i + $x0 - 1]) / 2
+            $b = ($ch[$i + $x1 + 1] + $ch[$i + $x1 + 2]) / 2
+            for ($x = $x0; $x -le $x1; $x++) { $ch[$i + $x] = [float]($a + ($b - $a) * ($x - $x0 + 1) / ($x1 - $x0 + 2)) }
+        }
+    }
+}
+
 # The empty scene toned to img outside zone (the object with its shadow): img's own background.
 function Get-Background($img, $zone) {
     $b = $empty.Kopia()
@@ -232,6 +246,12 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
         $img = $s.img
         $m = $mimo
         $zhora = $false
+        if ($n.retus.($s.id)) {
+            # Spots the model drew into the product (Savoy's drain, a dark smudge with light dots),
+            # each row filled between its left and right surroundings.
+            $img = $img.Kopia()
+            foreach ($rect in @($n.retus.($s.id))) { Set-Retouch $img ([double[]]$rect) }
+        }
         if ($s.key -and -not $kat.promptKluc) {
             # Fittings painted green (chrome in the shelf's shadow has almost the wall's tone; the
             # wall of a variant's generation drifts in tone, the bronze one pink under the shelf):
