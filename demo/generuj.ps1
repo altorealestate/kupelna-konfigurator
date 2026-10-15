@@ -53,10 +53,14 @@ $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id })
 $plateIds = @($plates | ForEach-Object { $_.id })
 
 # The claddings and everything generated on them ("<...>@<cladding>") use the cladding category's
-# "resolution" when it has one (2K: at 4K the model drew the stone as a grainy relief); the result
-# is stretched to the base frame when it is aligned.
+# "resolution" when it has one (2K: at 4K the model drew the stone as a grainy relief); so do the
+# variants of any other category with its own "resolution" (the floor tiles). The result is
+# stretched to the base frame when it is aligned.
 function Get-Resolution([string]$id) {
     if ($plateCat.resolution -and $plateIds -contains ($id -replace '^.*@', '')) { return [string]$plateCat.resolution }
+    $v = $cfg.varianty | Where-Object { $_.id -eq $id } | Select-Object -First 1
+    $kat = if ($v) { $cfg.kategorie | Where-Object { $_.id -eq $v.kategoria } | Select-Object -First 1 }
+    if ($kat.resolution) { return [string]$kat.resolution }
     [string]$cfg.resolution
 }
 

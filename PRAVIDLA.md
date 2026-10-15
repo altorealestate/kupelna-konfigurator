@@ -10,11 +10,12 @@ Kontrolný zoznam ku každej zmene dema a zoznam chýb, ktoré sa už stali. Ako
   - Nový obklad: obklad + `prazdne-doplnky@` + 2× umývadlo@ + čierne@ + bronzové@ + `zrkadlo@` = 7 generácií, všetky v 2K (asi $0,08–0,09 za kus).
   - Nová batéria (čierna + bronz): aspoň variant + bronz + 3× čierna@ + 3× bronz@ = 8 generácií, plus prípadné pomocné kroky (prefarbenie sifónu, otočenie).
   - Nové umývadlo: variant + `#kluc` + 3× @obklad = 5 generácií.
-- **Model:** OpenAI `gpt-image-2.5-sunburst` (`openai-image.ps1`, od 14. 10. 2026), demo v 4K, obklady a všetko na nich (`*@obklad-…`) v 2K (`resolution` kategórie obklad), rýchle testy v 1K. Iný model len na výslovnú požiadavku. Všetky doterajšie výsledky dema sú z kie.ai `gpt-image-2-5-flare`: nová generácia z OpenAI sa môže líšiť farbou, ostrosťou aj prerámovaním, preto pri prvej sérii skontrolovať aj zhodu s výsledkami z kie (krok 3, `kontrola.py zostava`).
+- **Model:** OpenAI `gpt-image-2.5-sunburst` (`openai-image.ps1`, od 14. 10. 2026), demo v 4K, obklady a všetko na nich (`*@obklad-…`) aj dlažba v 2K (`resolution` kategórie), rýchle testy v 1K. Iný model len na výslovnú požiadavku. Všetky doterajšie výsledky dema sú z kie.ai `gpt-image-2-5-flare`: nová generácia z OpenAI sa môže líšiť farbou, ostrosťou aj prerámovaním, preto pri prvej sérii skontrolovať aj zhodu s výsledkami z kie (krok 3, `kontrola.py zostava`).
 - **Model vždy prekreslí celý obrázok, nielen to, čo meníme.** Generácia obkladu prekreslí aj doplnky na polici, policu, umývadlo, batérie a žľab; generácia dlažby prekreslí žľab. Pre každú vec, ktorá sa meniť nemá a stránka ju berie z danej generácie, musí existovať poistka (vrátenie z podkladu, vyrezanie z vrstvy) alebo aspoň kontrola v kroku 2.
 - **Prompt:**
   - po anglicky;
   - obklad: veta o rovnej hladkej platni s vytlačeným vzorom, bez reliéfu, zŕn a šumu (skopírovať z existujúceho obkladu vo `varianty.json`; pri leštenom obklade bez „matte“);
+  - dlažba: to isté pre dlaždicu 600 × 600 a slovami aj tón a farbu produktu (Stone Life Graphite: tmavá antracitová, tmavšia ako steny, bez zeleného či olivového nádychu), inak ju model zosvetlí;
   - vymenovať všetky časti produktu (výtok vane, ručná sprcha, hadica, držiak…), inak ich model vynechá;
   - rozmer voči pôvodnému produktu (umývadlo Laufen living SQ 600×340 mm), inak model zachová pôvodnú šírku;
   - vymenovať, čo ostáva: kamera, svetlo, polica s presným tvarom a hrúbkou, umývadlo stojí na polici (nie zapustené), batérie, sifón, žľab, sklenená zástena, zrkadlo, vaňa, stolička, doplnky na polici, strop;
@@ -87,13 +88,14 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | Odraz v zrkadle s pôvodným obkladom | prompt obkladu držal „the round mirror and its reflection“ | `zrkadlo@<obklad>` (odraz prekreslený na obklade bez doplnkov), zo zrkadlovej generácie sa berie len vnútro zrkadla |
 | **Obklady v 4K zrnité, „horšie ako prvá 1K verzia“** (kolega 14. 10.) | model v 4K kreslil kameň ako reliéf so svetlými zrnkami, travertín ako vystúpené vlny; referenčné fotky majú len 640 px; v 1K na reliéf nemal rozlíšenie | prompt rovnej hladkej platne + obklady a všetko na nich v 2K (kolega vybral 15. 10. z testu 1K / 4K / 4K a 2K s novým promptom); povrch obkladu je v kontrolnom zozname |
 | **Umývadlová batéria na Calacatte, Graphite a Travertine: svetlý obrys s rozmazanou čiernou škvrnou** (používateľ 15. 10., po pregenerovaní obkladov v 2K) | vstup `@obklad` už mal zmenšenú batériu (`mierka`), `zostav` ju zmenšil druhýkrát; kontrola po zostavení pozerala celý výrez batérií, kde je umývadlová batéria malá | `zmensene: true` vo `vysledky.json` → bez druhého zmenšenia; kontrola v kroku 3 aj s `--oblast bateria-umyvadlo` |
+| **Dlažba Stone Life Graphite nie je totožná s produktom** (používateľ 15. 10.): svetlejšia, do olivova, zrnitý reliéf | kie 4K, rovnaká príčina ako pri obkladoch; referencia má len 407 px | dlažba v 2K, prompt rovnej hladkej dlaždice a tón produktu slovami |
 | Batéria na Graphite väčšia ako na ostatných obkladoch, svetlá páka | model pri dočistení batériu zväčšil (~1,2×) a páku prekreslil; jadro sa obnovuje len vnútri, tenká páka doň nepatrí | `Set-ScaledCleanup`: batéria zo vstupu generácie, zväčšený okraj nahradí uvoľnená stena |
 | Zvyšok starej misy vedľa Savoy (Travertine), schodík na polici (Graphite) | nie výrez doplnkov (pôvodný odhad), ale samotná AI: úzky pruh starej misy vedľa širokej Savoy nechala ako dizajn, pri tmavej stene prefarbila zadný okraj police do teplej | `pozadieZ`: miesto po starej mise mimo Savoy z výsledku užšieho okrúhleho umývadla na tom istom obklade; `polica` už od zadnej hrany police |
 
 ## 6. Zámerné rozhodnutia (nemeniť bez dohody)
 
 - Generovanie cez OpenAI `gpt-image-2.5-sunburst` (predtým kie.ai GPT 2.5 flare), demo v 4K.
-- Obklady v 2K s promptom rovnej hladkej platne (kolega 15. 10. 2026: z porovnania 1K, 4K a nového promptu v 4K a 2K je 2K najlepšie). 4K pre obklady nevracať bez nového porovnania s ním.
+- Obklady v 2K s promptom rovnej hladkej platne (kolega 15. 10. 2026: z porovnania 1K, 4K a nového promptu v 4K a 2K je 2K najlepšie). 4K pre obklady nevracať bez nového porovnania s ním. Dlažba rovnako v 2K.
 - Bronz = prefarbená čierna batéria (rovnaký tvar). Sprcha sa iba prefarbí.
 - Sifón a krytka prepadu majú farbu batérií. V katalógu nie sú, takže je to predpoklad, ktorý môže potvrdiť kolega.
 - Chrómová vzpera sklenenej zásteny ostáva chrómová (patrí k sklu, nie k Hansgrohe).
@@ -113,6 +115,7 @@ Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už 
 - Pravý okraj Savoy na Graphite a Travertine má pri zväčšení tenký svetlejší lem (AI ju na obklade nakreslila o pár px širšiu, jadro sa obnovuje len vnútri).
 - Okolo batérie na pôvodnom obklade je slabo svetlejší obdĺžnik (AI prekreslila stenu, vrstva ju čiastočne berie).
 - V okrúhlom umývadle je pod batériou na vnútornej stene misy svetlejší pás. Je tam aj s pôvodnou chrómovou batériou, nakreslil ho model pri generovaní umývadla.
+- Pri dlažbe Stone Life Graphite na Calacatte a Graphite má stolička pri nohách tenký svetlejší lem (vrstva dlažby nesie stoličku z generácie dlažby na pôvodnom obklade).
 - Pri rozete sifónu na Graphite a Travertine slabý svetlý oblúk starej chrómovej rozety (viditeľný až pri ~3× zväčšení). Na Graphite pri 4× zväčšení tenký svetlý prúžok vľavo od tela umývadlovej batérie.
 
 ## 9. Prostredie

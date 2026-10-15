@@ -55,17 +55,18 @@
                            "cenaUsd":  0.0882
                        },
     "dlazba-graphite":  {
-                            "subor":  "vystupy\\20261013-165224_77ebfa40_1.png",
-                            "taskId":  "77ebfa40609e9ab5c20851e792a5e1c6",
-                            "sekund":  81.9,
+                            "subor":  "vystupy\\20261015-101744_64beb403_1.png",
+                            "taskId":  "req_64beb403e90943fba6dde85a5059a6cc",
+                            "sekund":  46.4,
                             "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
                             "zarovnanie":  [
-                                               0.99738,
-                                               0.99612,
-                                               1.62,
-                                               -2.62
+                                               0.99994,
+                                               0.99969,
+                                               0.12,
+                                               -0.5
                                            ],
-                            "zhoda":  0.79
+                            "zhoda":  0.895,
+                            "cenaUsd":  0.0857
                         },
     "dlazba-amani":  {
                          "subor":  "vystupy\\20261013-165158_2d0762a4_1.png",
