@@ -150,23 +150,47 @@ function Get-ScaleMask($results, $v, $kat) {
 }
 # The freed wall is the helper image without objects ("prazdny") moved to the wall colour of $img
 # around the object: a cladding result still has the original mixer, a few pixels off on some.
-function Set-Scale($results, $img, $v, $kat, $masks) {
+function Get-ScaleParts($results, $img, $v, $kat, $masks) {
     $s = $v.mierka
     $z = [double[]]$s.z
     $d = [double[]]$s.do
     $t = ($z[0] * $W), ($z[1] * $H), ($d[0] * $W), ($d[1] * $H), [double]$s.k
-    $scaled = $img.Mierka($t[0], $t[1], $t[2], $t[3], $t[4])
     $small = [Mapa]::Mierka($masks.tesna, $W, $H, $t[0], $t[1], $t[2], $t[3], $t[4])
     $front = [Mapa]::Riadky($W, $H, [double]$s.okraj, 2)
     $small = [Mapa]::Min($small, [Mapa]::Doplnok($front))
     $empty = Get-Aligned $results $kat.prazdny $kat
     $keep = [Mapa]::Doplnok([Mapa]::Max([Mapa]::Rozsir($masks.vysoka, $W, $H, (Get-Px 3)), $front))
     $bg = [Obr]::Prefarbi($empty, $empty.RozmazVazene($keep, (Get-Px 25)), $img.RozmazVazene($keep, (Get-Px 25)), 1000, 1001)
+    @{ t = $t; small = $small; front = $front; empty = $empty; bg = $bg }
+}
+function Set-Scale($results, $img, $v, $kat, $masks) {
+    $p = Get-ScaleParts $results $img $v $kat $masks
+    $t = $p.t
+    $scaled = $img.Mierka($t[0], $t[1], $t[2], $t[3], $t[4])
     # The large mixer's foot reached over the back rim of the washbasin, which is the same on
     # every cladding: there the helper image is used as it is.
-    $img.Prekry($empty, [Mapa]::Min($masks.vysoka, $front))
-    $img.Prekry($bg, [Mapa]::Min($masks.vysoka, [Mapa]::Doplnok($front)))
-    $img.Prekry($scaled, $small)
+    $img.Prekry($p.empty, [Mapa]::Min($masks.vysoka, $p.front))
+    $img.Prekry($p.bg, [Mapa]::Min($masks.vysoka, [Mapa]::Doplnok($p.front)))
+    $img.Prekry($scaled, $p.small)
+}
+# A cladding result whose input already had the scaled object ("zmensene"): the model sometimes
+# draws it larger again (on Graphit, the bronze one about 1.2x) and the thin lever lighter. The
+# object itself ($nove inside "roi") is taken from the input, which has it in the right size with
+# its edge moved to this cladding; where the result differs from the input around it, inside the
+# large object's area, the freed wall is used.
+function Set-ScaledCleanup($results, $img, $v, $kat, $masks, [string]$id, $nove) {
+    $p = Get-ScaleParts $results $img $v $kat $masks
+    $in = Get-Input $results[$id].vstup
+    $roi = [Mapa]::Doplnok((New-Object 'float[]' ($W * $H)))
+    [Mapa]::Oblast($roi, $W, $H, [double[]]$v.mierka.roi)
+    $nove = [Mapa]::Min($nove, $roi)
+    $grown = [Mapa]::Prah([Obr]::Rozdiel($img.Rozmaz(1), $in.Rozmaz(1)), 25, 50)
+    $around = [Mapa]::Min($masks.vysoka, [Mapa]::Doplnok([Mapa]::Max($nove, $p.front)))
+    $grown = [Mapa]::Zuz([Mapa]::Rozsir([Mapa]::Min($grown, $around), $W, $H, (Get-Px 3)), $W, $H, (Get-Px 1))
+    $grown = [Mapa]::Min($grown, $around)
+    $img.Prekry($p.bg, [Mapa]::Rozmaz($grown, $W, $H, 1))
+    $img.Prekry($in, $nove)
+    , $grown
 }
 
 # Helper results a per-cladding task of variant $v needs besides the variant and the cladding.

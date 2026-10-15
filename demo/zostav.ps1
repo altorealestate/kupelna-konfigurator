@@ -317,7 +317,16 @@ foreach ($o in $plates) {
             }
             $f = $fix[$v.id]
             $img = Get-Aligned $results $key $kat
-            if ($f.mierka) { Set-Scale $results $img $v $kat $f.mierka }
+            # Results with "zmensene" got the object already scaled in their input; the older ones
+            # still have the large one (scaling them twice leaves a pale outline with a small blob).
+            if ($f.mierka) {
+                if (-not $results[$key].zmensene) {
+                    Set-Scale $results $img $v $kat $f.mierka
+                } else {
+                    $grown = Set-ScaledCleanup $results $img $v $kat $f.mierka $key $f.nove
+                    if ($Ladenie) { [Obr]::ZMasky($grown, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "zvacsene-$key.jpg"), 80) }
+                }
+            }
             # Variant option "pozadieZ": where the old object stood outside this one, the model
             # sometimes keeps a ghost of it on the cladding (the old basin's edge next to the wide
             # Savoy). The narrower variant's result on the same cladding is clean wall there.

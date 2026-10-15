@@ -44,6 +44,7 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 - `zostav.ps1 -Ladenie <priečinok>` (v scratchpade): prejsť masky aj `kombinacia-*.jpg`.
 - `python demo\kontrola.py zostava` (alebo `-k baterie umyvadlo`): každý variant na všetkých štyroch obkladoch (pôvodný, Calacatta, Graphit, Travertine) v zväčšených výrezoch, poskladaný ako stránka. `-k obklad` ukáže oblasti kontrolného zoznamu (doplnky, pás za žľabom, zrkadlo…) na každom obklade, `--vyber dlazba=…` pridá inú dlažbu.
 - Prepínať obklady pri tej istej batérii a umývadle: veľkosť a poloha sa nesmú zmeniť. Rovnako čierna a bronzová batéria.
+- Umývadlová batéria je v celom výreze kategórie malá: `kontrola.py zostava -k baterie --oblast bateria-umyvadlo` (zväčšený výrez). Celá batéria vrátane páky musí mať na každom obklade rovnaký tvar a farbu, bez svetlého obrysu.
 - Každé umývadlo celé až po konce (široké Savoy zasahuje k doplnkom).
 - Výpis `object changed by …` (ako veľmi AI zmenila vložený prvok) a varovania `has no result` / `Layer … is empty`.
 - `python demo\kontrola.py stranka`: screenshoty v 1440 a 390 px, rozbité obrázky, chyby v konzole, chýbajúce súbory. Pozrieť aj mobil.
@@ -85,6 +86,8 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | Umývadlová batéria asi 1,5× väčšia ako pôvodná (výška aj hrúbka tela) | prompt žiadal Tecturis S 240 Fine („240“ = vysoká verzia) | `mierka` variantu: batéria sa zmenší 0,67× okolo bodu, kde stojí na polici, na miesto pôvodnej; stena za ňou z `prazdne-baterie` prefarbená na obklad (podklad obkladu má pôvodnú batériu o pár px inde, kľúč umývadla je o ~13 px vyššie ako hrana misy → `okraj`) |
 | Odraz v zrkadle s pôvodným obkladom | prompt obkladu držal „the round mirror and its reflection“ | `zrkadlo@<obklad>` (odraz prekreslený na obklade bez doplnkov), zo zrkadlovej generácie sa berie len vnútro zrkadla |
 | **Obklady v 4K zrnité, „horšie ako prvá 1K verzia“** (kolega 14. 10.) | model v 4K kreslil kameň ako reliéf so svetlými zrnkami, travertín ako vystúpené vlny; referenčné fotky majú len 640 px; v 1K na reliéf nemal rozlíšenie | prompt rovnej hladkej platne + obklady a všetko na nich v 2K (kolega vybral 15. 10. z testu 1K / 4K / 4K a 2K s novým promptom); povrch obkladu je v kontrolnom zozname |
+| **Umývadlová batéria na Calacatte, Graphite a Travertine: svetlý obrys s rozmazanou čiernou škvrnou** (používateľ 15. 10., po pregenerovaní obkladov v 2K) | vstup `@obklad` už mal zmenšenú batériu (`mierka`), `zostav` ju zmenšil druhýkrát; kontrola po zostavení pozerala celý výrez batérií, kde je umývadlová batéria malá | `zmensene: true` vo `vysledky.json` → bez druhého zmenšenia; kontrola v kroku 3 aj s `--oblast bateria-umyvadlo` |
+| Batéria na Graphite väčšia ako na ostatných obkladoch, svetlá páka | model pri dočistení batériu zväčšil (~1,2×) a páku prekreslil; jadro sa obnovuje len vnútri, tenká páka doň nepatrí | `Set-ScaledCleanup`: batéria zo vstupu generácie, zväčšený okraj nahradí uvoľnená stena |
 | Zvyšok starej misy vedľa Savoy (Travertine), schodík na polici (Graphite) | nie výrez doplnkov (pôvodný odhad), ale samotná AI: úzky pruh starej misy vedľa širokej Savoy nechala ako dizajn, pri tmavej stene prefarbila zadný okraj police do teplej | `pozadieZ`: miesto po starej mise mimo Savoy z výsledku užšieho okrúhleho umývadla na tom istom obklade; `polica` už od zadnej hrany police |
 
 ## 6. Zámerné rozhodnutia (nemeniť bez dohody)
@@ -98,7 +101,7 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 
 ## 7. Otvorené chyby
 
-Žiadne. Chyby nahlásené 14. 10. 2026 (pás za žľabom, odraz v zrkadle, veľkosť batérie, konce Savoy, zrnité obklady) sú opravené, pozri tabuľku v časti 5. Kontrola v kroku 2 a 3 preto zahŕňa aj pás podlahy za žľabom, odraz v zrkadle, veľkosť batérie voči pôvodnej, konce širokého umývadla a povrch obkladu.
+Žiadne. Chyby nahlásené 14. 10. 2026 (pás za žľabom, odraz v zrkadle, veľkosť batérie, konce Savoy, zrnité obklady) a 15. 10. 2026 (umývadlová batéria na nových obkladoch) sú opravené, pozri tabuľku v časti 5. Kontrola v kroku 2 a 3 preto zahŕňa aj pás podlahy za žľabom, odraz v zrkadle, veľkosť batérie voči pôvodnej, zväčšený výrez umývadlovej batérie, konce širokého umývadla a povrch obkladu.
 
 Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už v surovom 4K výstupe, JPEG na stránke sa od neho takmer nelíšil. Vysokofrekvenčná energia steny Graphit pri zobrazení 1440 px: 4K kie 6,4, 1K 4,4, pôvodná vizualizácia 2,2. Stlmenie filtrom (frekvenčné oddelenie, 30 %) zrnká zmierni, reliéf nie. Test promptu je vo `vystupy\test-obklad\` (zmenil sa prompt aj model naraz).
 
@@ -109,6 +112,8 @@ Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už 
 - Slabé čiary po starých prvkoch sú viditeľné až pri asi 4× zväčšení.
 - Pravý okraj Savoy na Graphite a Travertine má pri zväčšení tenký svetlejší lem (AI ju na obklade nakreslila o pár px širšiu, jadro sa obnovuje len vnútri).
 - Okolo batérie na pôvodnom obklade je slabo svetlejší obdĺžnik (AI prekreslila stenu, vrstva ju čiastočne berie).
+- V okrúhlom umývadle je pod batériou na vnútornej stene misy svetlejší pás. Je tam aj s pôvodnou chrómovou batériou, nakreslil ho model pri generovaní umývadla.
+- Pri rozete sifónu na Graphite a Travertine slabý svetlý oblúk starej chrómovej rozety (viditeľný až pri ~3× zväčšení). Na Graphite pri 4× zväčšení tenký svetlý prúžok vľavo od tela umývadlovej batérie.
 
 ## 9. Prostredie
 

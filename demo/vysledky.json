@@ -144,7 +144,8 @@
                                                             -0.62
                                                         ],
                                          "zhoda":  0.892,
-                                         "cenaUsd":  0.0801
+                                         "cenaUsd":  0.0801,
+                                         "zmensene":  true
                                      },
     "baterie-bronze":  {
                            "subor":  "vystupy\\20261014-100338_7244af04_1.png",
@@ -211,7 +212,8 @@
                                                               -0.62
                                                           ],
                                            "zhoda":  0.955,
-                                           "cenaUsd":  0.0801
+                                           "cenaUsd":  0.0801,
+                                           "zmensene":  true
                                        },
     "baterie-black@obklad-travertine":  {
                                             "subor":  "vystupy\\20261015-092246_342a3a1d_1.png",
@@ -225,7 +227,8 @@
                                                                -0.62
                                                            ],
                                             "zhoda":  0.935,
-                                            "cenaUsd":  0.0801
+                                            "cenaUsd":  0.0801,
+                                            "zmensene":  true
                                         },
     "baterie-bronze@obklad-calacatta":  {
                                             "subor":  "vystupy\\20261015-092259_c28783e7_1.png",
@@ -239,7 +242,8 @@
                                                                -0.62
                                                            ],
                                             "zhoda":  0.931,
-                                            "cenaUsd":  0.0801
+                                            "cenaUsd":  0.0801,
+                                            "zmensene":  true
                                         },
     "baterie-bronze@obklad-graphit":  {
                                           "subor":  "vystupy\\20261015-092313_c8610127_1.png",
@@ -253,7 +257,8 @@
                                                              -0.62
                                                          ],
                                           "zhoda":  0.889,
-                                          "cenaUsd":  0.0801
+                                          "cenaUsd":  0.0801,
+                                          "zmensene":  true
                                       },
     "baterie-bronze@obklad-travertine":  {
                                              "subor":  "vystupy\\20261015-092324_34ecd88c_1.png",
@@ -267,7 +272,8 @@
                                                                 -0.38
                                                             ],
                                              "zhoda":  0.908,
-                                             "cenaUsd":  0.0801
+                                             "cenaUsd":  0.0801,
+                                             "zmensene":  true
                                          },
     "umyvadlo-savoy@obklad-calacatta":  {
                                             "subor":  "vystupy\\20261015-092332_f4002e58_1.png",

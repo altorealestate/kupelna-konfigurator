@@ -229,7 +229,7 @@ while ($waiting.Count -gt 0) {
             Set-ExecutionPolicy -Scope Process Bypass -Force
             & $script -Prompt $prompt -Images $images @opts
         }
-        $job | Add-Member -NotePropertyName Vstup -NotePropertyValue $in -PassThru
+        $job | Add-Member -NotePropertyMembers @{ Vstup = $in; Zmensene = ($t.typ -eq 'naObklad' -and [bool]$t.v.mierka) } -PassThru
     }
 
     $jobs | Wait-Job | Out-Null
@@ -250,6 +250,8 @@ while ($waiting.Count -gt 0) {
             }
             $price = ''
             if ($meta.costUsd) { $results[$job.Name].cenaUsd = $meta.costUsd; $price = (", `${0:N3}" -f $meta.costUsd) }
+            # The input already had the object scaled ("mierka"), zostav must not scale it again.
+            if ($job.Zmensene) { $results[$job.Name].zmensene = $true }
             Write-Host ("OK   {0}: {1}  (scale {2:N4} x {3:N4}, shift {4:N1}, {5:N1} px, match {6:N2}{7})" -f $job.Name, $file, $al[0], $al[1], $al[2], $al[3], $al[4], $price)
         } catch {
             Write-Warning "FAIL $($job.Name): $($_.Exception.Message)"
