@@ -73,29 +73,33 @@ function Get-Difference($img, $zone0, [double[]]$q, [float]$t0, [float]$t1) {
 # outline the opacity is how far a pixel lies between the wall right around the object in img
 # itself and the object's own colour next to it (a threshold on the difference to the empty
 # scene, another generation, let the warmer wall of the black taps' generation through as a
-# halo). "mimo" = 0 where other objects of img are. The shadow reaches $R px around the outline.
+# halo). "mimo" = 0 where other objects of img are. The shadow reaches $reach px around the
+# outline; it is the darkening against img's own wall around the object, or with $scena against
+# the empty scene toned to img (a washbasin's shadow falls on the narrow shelf: an estimate from
+# img itself mixes in the shadow, the wall and the shelf's front edge).
 # Returns @{ img; alfa; zone } (and masks for -Ladenie).
-function New-Layer($img, $outline, $tight, [double[]]$q, $mimo) {
+function New-Layer($img, $outline, $tight, [double[]]$q, $mimo, [int]$reach, [bool]$scena) {
     # Where the original objects with their shadows are (the original cladding gets the empty
     # scene there).
-    $zone = [Mapa]::Rozsir([Mapa]::Prah($outline, 0.01, 0.02), $W, $H, 2 * $R)
+    $zone = [Mapa]::Rozsir([Mapa]::Prah($outline, 0.01, 0.02), $W, $H, 2 * $reach)
     # The wall of img itself (the empty scene is another generation: its wall differs in tone,
     # warmer on the black taps' generation, and in the joints). First estimated from around the
     # outline with a large radius, then the pixels inside the outline that match it are added
     # (the wall between a riser and its hose, around a large thermostat).
-    $r = Get-Px 1
-    $c1 = $img.Rozmaz($r)
+    # ($px1, not $r: PowerShell variables ignore case, $r would hide the script's $R.)
+    $px1 = Get-Px 1
+    $c1 = $img.Rozmaz($px1)
     $region = [Mapa]::Prah($outline, 0.01, 0.05)
     $wgt = [Mapa]::Min([Mapa]::Doplnok([Mapa]::Rozsir($region, $W, $H, (Get-Px 2))), $mimo)
     # Also background: what matches the empty scene toned to img (it has the bathtub rim, the
     # shelf's edges and the joints, the wall estimate only knows the wall), a few pixels off at
     # most (another generation draws them a little elsewhere).
-    $scene = [Vrstva]::RozdielPosun($c1, (Get-Background $img ([Mapa]::Max($zone, [Mapa]::Doplnok($mimo)))).Rozmaz($r), (Get-Px 4), (Get-Px 1))
+    $scene = [Vrstva]::RozdielPosun($c1, (Get-Background $img ([Mapa]::Max($zone, [Mapa]::Doplnok($mimo)))).Rozmaz($px1), (Get-Px 4), (Get-Px 1))
     # The first radius must reach real wall from anywhere inside the outline (a smaller one blends
     # in the object, its dark parts then pass as wall).
     foreach ($rad in @((Get-Px 60), (Get-Px 15))) {
         $res = [Mapa]::Min([Obr]::Rozdiel($c1, $img.RozmazVazene($wgt, $rad)), $scene)
-        $like = [Mapa]::Doplnok([Mapa]::Rozsir([Mapa]::Prah($res, 25, 45), $W, $H, $r))
+        $like = [Mapa]::Doplnok([Mapa]::Rozsir([Mapa]::Prah($res, 25, 45), $W, $H, $px1))
         $wgt = [Mapa]::Min([Mapa]::Max($wgt, [Mapa]::Min($like, $region)), $mimo)
     }
     if ($null -eq $tight) {
@@ -109,16 +113,25 @@ function New-Layer($img, $outline, $tight, [double[]]$q, $mimo) {
     }
     $sure = [Mapa]::Rozsir([Mapa]::Prah($tight, 0.2, 0.4), $W, $H, (Get-Px 2))
     $wall = $img.RozmazVazene([Mapa]::Min($wgt, [Mapa]::Doplnok($sure)), (Get-Px 8))
-    # For the shadow: the wall beyond its reach.
-    $bg = $img.RozmazVazene([Mapa]::Min($wgt, [Mapa]::Doplnok([Mapa]::Rozsir($sure, $W, $H, $R))), (Get-Px 30))
+    # For the shadow: the wall beyond its reach, or the empty scene toned to img there.
+    $far = [Mapa]::Rozsir($sure, $W, $H, $reach)
+    $posun = 0
+    $ostre = 0
+    if ($scena) {
+        $bg = Get-Background $img ([Mapa]::Max($far, [Mapa]::Doplnok($mimo)))
+        $posun = Get-Px 2
+        $ostre = Get-Px 1
+    } else {
+        $bg = $img.RozmazVazene([Mapa]::Min($wgt, [Mapa]::Doplnok($far)), (Get-Px 30))
+    }
     $core = [Mapa]::Zuz([Mapa]::Prah($tight, 0.5, 0.9), $W, $H, (Get-Px 1))
     # The object's own colour next to an edge (far enough that a faint halo pixel still finds it).
     $obj = $img.RozmazVazene($core, (Get-Px 12))
     $a = [Mapa]::Max($core, [Vrstva]::Alfa($img.Rozmaz(1), $wall, $obj, $outline, 24))
-    $tien = [Mapa]::Rozmaz([Mapa]::Rozsir([Mapa]::Prah($outline, 0.3, 0.6), $W, $H, $R), $W, $H, [Math]::Max(1, [int]($R / 3)))
-    $tien = [Mapa]::Min([Mapa]::Min($tien, (Get-Rects $q $R)), $mimo)
+    $tien = [Mapa]::Rozmaz([Mapa]::Rozsir([Mapa]::Prah($outline, 0.3, 0.6), $W, $H, $reach), $W, $H, [Math]::Max(1, [int]($reach / 3)))
+    $tien = [Mapa]::Min([Mapa]::Min($tien, (Get-Rects $q $reach)), $mimo)
     $farba = $null
-    $all = [Vrstva]::Zloz($img, $bg, $wall, $obj, $a, $tien, (Get-Px 4), 0.07, 0.15, [ref]$farba)
+    $all = [Vrstva]::Zloz($img, $bg, $wall, $obj, $a, $tien, (Get-Px 4), 0.07, 0.15, $posun, $ostre, [ref]$farba)
     @{ img = $farba; alfa = $all; zone = $zone; obj = $a; tight = $tight; wgt = $wgt }
 }
 
@@ -137,11 +150,11 @@ function Set-LayerScale($layer, $v) {
 
 # One cropped PNG per ROI rectangle grown by the shadow reach; every pixel goes to the first
 # rectangle that contains it (overlapping pieces would darken twice).
-function Save-Layer($layer, [string]$name, [double[]]$q) {
+function Save-Layer($layer, [string]$name, [double[]]$q, [int]$reach) {
     $pieces = @()
     $taken = New-Object 'float[]' ($W * $H)
     for ($i = 0; $i -lt $q.Count; $i += 4) {
-        $own = [Mapa]::Min((Get-Rects ([double[]]$q[$i..($i + 3)]) ($R + (Get-Px 2))), [Mapa]::Doplnok($taken))
+        $own = [Mapa]::Min((Get-Rects ([double[]]$q[$i..($i + 3)]) ($reach + (Get-Px 2))), [Mapa]::Doplnok($taken))
         $taken = [Mapa]::Max($taken, $own)
         $a = [Mapa]::Min($layer.alfa, $own)
         $bb = [Mapa]::Ohranicenie($a, $W, $H, 0.004, 2)
@@ -160,12 +173,29 @@ function Save-Layer($layer, [string]$name, [double[]]$q) {
 # them to this cladding (as in zostav.ps1). Glass cannot be one layer for every cladding: what is
 # seen through it would have to be both transparent and keep its colour.
 $acc = Get-Accessories $results
+# Thin parts (the diffuser's reeds, "tenke"): light sticks on a light wall, the accessories' mask
+# drops them as specks and the empty scene has none. Inside their rectangles they are found by
+# colour (a difference to the base without accessories also takes the wall's texture) and pasted
+# as they are, not moved to the cladding's colour like the wall-like edges (they would fade into
+# a dark cladding).
+$thin = $null
+if ($n.tenke) {
+    $thin = [Vrstva]::Tenke($acc.base, (Get-Px 3), 4, 10)
+    [Mapa]::Oblast($thin, $W, $H, [double[]]$n.tenke)
+    $thin = [Mapa]::Rozmaz($thin, $W, $H, 1)
+    $acc.nove = [Mapa]::Max($acc.nove, $thin)
+    Save-Mask $acc.nove 'doplnky'
+}
 $accNear = [Mapa]::Doplnok([Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 3)))   # product layers leave them out
-$footprint = [Mapa]::Rozsir($acc.erase, $W, $H, (Get-Px 4))   # original objects with their shadows
+# The original cladding keeps the photo around the accessories (the empty scene there is another
+# generation, with the accessories' own blotches); only the original products are replaced.
+$accKeep = [Mapa]::Doplnok([Mapa]::Rozsir($acc.nove, $W, $H, (Get-Px 8)))
+$footprint = New-Object 'float[]' ($W * $H)
 function Add-Accessories($plate) {
     $low = $plate.Rozmaz((Get-Px 1))
     $obj = [Obr]::Prefarbi($acc.base, $acc.empty, $low, 25, 55)
     if ($acc.kluc) { $obj.Prekry([Obr]::Prefarbi($acc.base, $acc.empty, $low, 18, 32), [Mapa]::Zuz($acc.kluc, $W, $H, (Get-Px 1))) }
+    if ($thin) { $obj.Prekry($acc.base, $thin) }
     $plate.Prekry($obj, $acc.nove)
 }
 $keys = @{}   # category id -> helper result with its original objects painted green
@@ -175,6 +205,8 @@ foreach ($k in @($n.kluce)) { if ($results.Contains($k.id)) { $keys[$k.kategoria
 $layers = @{}   # category id -> option id -> pieces
 foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
     $q = [double[]]$kat.roi
+    $scena = $null -ne $n.tienZoSceny.($kat.id)
+    $reach = if ($scena) { Get-Px ([double]$n.tienZoSceny.($kat.id)) } else { $R }
     $mimo = [Mapa]::Min($accNear, $ones)
     if ($n.pred.($kat.id)) { $mimo = [Mapa]::Min($mimo, [Mapa]::Doplnok((Get-Rects ([double[]]$n.pred.($kat.id)) 0))) }
     $layers[$kat.id] = [ordered]@{}
@@ -197,25 +229,30 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
             [Mapa]::Oblast($key, $W, $H, $q)
             $o = [Mapa]::Min([Mapa]::Rozsir([Mapa]::Zuz($key, $W, $H, 1), $W, $H, 1), $m)
         } elseif ($s.key) {
-            # Painted green by the model, a little too high (taller than the object) and not quite
-            # exact at the edges: the top rows of the key come from the difference only; around the
-            # key, where the object differs from the wall, it is added.
+            # Painted green by the model, often a little taller than the object (the original
+            # washbasin's key about 15 px, Savoy's hardly at all; a fixed cut took Savoy's back rim
+            # and the inside of the bowl): in every column the key without the rows it reaches
+            # above the object's top edge in img. The edges are left to the layer's opacity (a
+            # difference around the key took the contact shadow and the lit shelf under it as a
+            # light rim).
             $key = (Get-Aligned $results $s.key $kat).Zelena(50, 110)
             [Mapa]::Oblast($key, $W, $H, $q)
-            $top = [Mapa]::Min($key, [Vrstva]::Posun($key, $W, $H, 0, (Get-Px 8)))
-            $zone0 = [Mapa]::Max([Mapa]::Rozsir($key, $W, $H, $R), [Mapa]::Doplnok($m))
-            if ($kat.stlpec) { $zone0 = [Mapa]::Max($zone0, (Get-Rects ([double[]]@($kat.stlpec[0], $q[1], $kat.stlpec[1], $q[3])) 0)) }
-            $d = Get-Difference $img $zone0 $q 18 36
-            $o = [Mapa]::Max([Mapa]::Min($d, [Mapa]::Rozsir($key, $W, $H, (Get-Px 2))), $top)
+            $skip = @(0, 0)
+            if ($kat.stlpec) { $skip = @([int]($kat.stlpec[0] * $W), [int]($kat.stlpec[1] * $W)) }
+            $e = 0
+            $o = [Vrstva]::OrezKluc($img.Rozmaz((Get-Px 1)), $key, $W, $H, (Get-Px 10), (Get-Px 3), 16, $skip[0], $skip[1], (Get-Px 10), [ref]$e)
+            Write-Host "    $($s.id): key reaches about $e px above the object"
             $o = [Mapa]::Rozsir([Mapa]::Zuz($o, $W, $H, (Get-Px 1)), $W, $H, (Get-Px 1))
-            # A tap behind the object: its column above the object's top edge is not this layer.
+            # A tap behind the object: its column above the object's top edge is not this layer
+            # (its outline and shadow there; the edge is found beside the column, lower than the
+            # top of a round rim, so the object itself stays).
             if ($kat.stlpec) {
                 $c = [double[]]$kat.stlpec
                 $col = [float[]]$ones.Clone()
                 $rim = [Mapa]::OrezStlpec($col, $o, $W, $H, $c[0], $c[1], 0.015, $kat.roi[1], 0.66, (Get-Px 4))
                 if ($rim -lt 0) { Write-Warning "$($s.id): top edge not found, column not cleared" }
                 else { Write-Host "    $($s.id): column cleared above y=$rim ($([Math]::Round($rim / $H, 3)))" }
-                $m = [Mapa]::Min($m, $col)
+                $m = [Mapa]::Min($m, [Mapa]::Max($col, $o))
             }
             $o = [Mapa]::Min($o, $m)
         } elseif ($s.v -and $kat.prazdny) {
@@ -230,11 +267,14 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
         # The key's outline is the object; without a key it is where it differs strongly.
         $tight = $null
         if ($s.key) { $tight = $o }
-        $layer = New-Layer $img $outline $tight $q $m
-        if ($s.id -eq 'povodny') { $footprint = [Mapa]::Max($footprint, $layer.zone) }
+        $layer = New-Layer $img $outline $tight $q $m $reach $scena
+        if ($s.id -eq 'povodny') {
+            $own = [Mapa]::Rozsir([Mapa]::Prah($outline, 0.01, 0.02), $W, $H, (Get-Px 3))
+            $footprint = [Mapa]::Max($footprint, [Mapa]::Max($own, [Mapa]::Min($layer.zone, $accKeep)))
+        }
         if ($s.v.mierka) { Set-LayerScale $layer $s.v }
         $name = if ($s.id -eq 'povodny') { "$($kat.id)-povodny" } else { $s.id }
-        $layers[$kat.id][$s.id] = Save-Layer $layer $name $q
+        $layers[$kat.id][$s.id] = Save-Layer $layer $name $q $reach
         Save-Mask $layer.alfa "vrstva-$name"
         Save-Mask $layer.obj "objekt-$name"
         Save-Mask $layer.tight "isty-$name"
@@ -245,11 +285,10 @@ foreach ($kat in @($cfg.kategorie | Where-Object { $_.naObkladoch })) {
 
 # --- Claddings -------------------------------------------------------------------------------------
 # The original one: the base photo with the empty scene (toned to it) where the original objects
-# and their shadows were; each of them is a layer now.
+# and their shadows were; each of them is a layer now. The accessories stay the photo's own.
 $footprint = [Mapa]::Rozmaz($footprint, $W, $H, (Get-Px 2))
 $plate = $base.Kopia()
 $plate.Prekry((Get-Background $base $footprint), $footprint)
-Add-Accessories $plate
 $plate.UlozJpg((Join-Path $imgDir 'povodny.jpg'), 85)
 Save-Mask $footprint 'podklad-povodny'
 $plate = $null

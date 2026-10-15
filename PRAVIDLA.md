@@ -97,6 +97,7 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | demo2: chrómový sifón takmer chýbal | v tieni pod policou má chróm tón steny, rozdiel voči prázdnej scéne ho nenašiel | zelený kľúč pôvodných batérií `kluc-baterie` |
 | demo2: béžová a hnedá aura, pás medzi tyčou a hadicou, ružový obdĺžnik pod policou (bronz) | stena generácie variantu je inak tónovaná ako prázdna scéna aj `prazdne-baterie` (čierna oranžová, bronz ružový), škáry a okraj vane o pár px inde; obrys z rozdielu zobral stenu | kľúč každého variantu (`<variant>#kluc`), stena z tej istej generácie, pozadie aj to, čo sedí s prázdnou scénou do ±9 px, opacita okraja projekciou, slabé okraje vo farbe predmetu |
 | demo2: svetlá linka pod umývadlom | rozmazanie pri výpočte tieňa roztieklo tmavý okraj misy na policu | tieň z rozmazania bez pixelov predmetu |
+| **demo2: umývadlá bez zadnej hrany a vnútra misy, pod misou svetlá linka bez tieňa, chýbajúce tyčinky difuzéra a svetlé fľaky pri váze** (používateľ 15. 10., Savoy + bronz na pôvodnom obklade) | Mis: pevný orez vrchu kľúča 18 px (kľúč Savoy sedí presne), rez stĺpca batérie aj cez misu. Tieň: odhad z vlastnej generácie na úzkej polici; kontaktná čiara rozmazaná na 9 px; `$r` v `New-Layer` prekryl `$R`, takže dosah bol 2 px. Doplnky: na pôvodnom obklade celé okolie doplnkov z prázdnej scény, tyčinky v maske nie sú. Kontrola po demo2 pozerala len celé výrezy, nie zväčšenú misu a doplnky. | Orez kľúča meraný po stĺpcoch (`OrezKluc`). Tieň umývadiel voči prázdnej scéne (`tienZoSceny`), ostrý kontaktný tieň a správny dosah. Pôvodný obklad nechá okolo doplnkov fotku. Tyčinky podľa farby (`tenke`). Kontrola: zväčšená misa (vrch aj spodok) a doplnky na každom obklade. |
 
 ## 6. Zámerné rozhodnutia (nemeniť bez dohody)
 
@@ -123,7 +124,8 @@ Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už 
 - V okrúhlom umývadle je pod batériou na vnútornej stene misy svetlejší pás. Je tam aj s pôvodnou chrómovou batériou, nakreslil ho model pri generovaní umývadla.
 - Pri rozete sifónu na Graphite a Travertine slabý svetlý oblúk starej chrómovej rozety (viditeľný až pri ~3× zväčšení). Na Graphite pri 4× zväčšení tenký svetlý prúžok vľavo od tela umývadlovej batérie.
 - demo2: chróm (pôvodné batérie) odráža béžovú stenu pôvodnej vizualizácie, na Graphite je svetlejší a teplejší ako v doterajšom postupe a tenká hadica má slabý svetlý lem. Lesklý chróm nemôže byť jedna vrstva pre všetky obklady bez úpravy odrazu.
-- demo2: na pôvodnom obklade má stena v okolí predmetov textúru prázdnej scény (iná generácia), v tieni pod policou a pri lístkoch vázy je pôvodná zostava mierne iná ako pôvodná vizualizácia (priemerný rozdiel 2,2 z 255).
+- demo2: na pôvodnom obklade má stena v okolí predmetov textúru prázdnej scény (iná generácia); pôvodná zostava sa od pôvodnej vizualizácie líši priemerne o 1,65 z 255.
+- demo2: tieň umývadla na polici je slabší ako mäkký tieň, ktorý AI kreslí pri generovaní na každom obklade, a pri difuzéri má malú medzeru (vrstvy produktov vynechávajú doplnky).
 
 ## 9. Prostredie
 

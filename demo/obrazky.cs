@@ -631,29 +631,33 @@ public static class Vrstva
     //   below n0 (two generations never match exactly), full above n1, times the weight tien
     //   (1 next to the object, 0 farther than the shadow reaches). The blur leaves the object out,
     //   so its own dark edge does not read as a shadow next to it. A black pixel with alpha s
-    //   darkens any background by the factor 1 - s.
+    //   darkens any background by the factor 1 - s. With posun > 0 bg is another generation (the
+    //   empty scene), whose edges (the shelf's front edge) lie a few pixels elsewhere: of bg
+    //   shifted by up to posun pixels, the luma closest to c's is used. With ostre > 0 a thin
+    //   strong darkening (a washbasin's contact shadow on the shelf, washed out by the blur rs)
+    //   counts too: measured with the blur ostre, ignored below 0.2, full above 0.35.
     // Returns the alpha; the colour goes to farba.
-    public static float[] Zloz(Obr c, Obr bg, Obr okraj, Obr obj, float[] alfa, float[] tien, int rs, float n0, float n1, out Obr farba)
+    public static float[] Zloz(Obr c, Obr bg, Obr okraj, Obr obj, float[] alfa, float[] tien, int rs, float n0, float n1, int posun, int ostre, out Obr farba)
     {
-        int n = c.R.Length;
+        int n = c.R.Length, cw = c.W, ch = c.H;
         var bl = okraj;
         var mimo = new float[n];
         for (int i = 0; i < n; i++) mimo[i] = 1f - Math.Min(1f, alfa[i] * 2f);
-        var cs = c.RozmazVazene(mimo, rs);
-        var bs = bg.RozmazVazene(mimo, rs);
-        var f = new Obr(c.W, c.H);
+        var lc = Luma(c.RozmazVazene(mimo, rs));
+        var lb = Luma(bg.RozmazVazene(mimo, rs));
+        float[] lc2 = null, lb2 = null;
+        if (ostre > 0) { lc2 = Luma(c.RozmazVazene(mimo, ostre)); lb2 = Luma(bg.RozmazVazene(mimo, ostre)); }
+        var f = new Obr(cw, ch);
         var o = new float[n];
-        Parallel.For(0, c.H, y =>
+        Parallel.For(0, ch, y =>
         {
-            for (int i = y * c.W; i < (y + 1) * c.W; i++)
+            for (int i = y * cw; i < (y + 1) * cw; i++)
             {
                 float s = 0;
                 if (tien[i] > 0)
                 {
-                    float yc = 0.299f * cs.R[i] + 0.587f * cs.G[i] + 0.114f * cs.B[i];
-                    float yb = 0.299f * bs.R[i] + 0.587f * bs.G[i] + 0.114f * bs.B[i];
-                    float k = 1f - Math.Min(1f, yc / Math.Max(1f, yb));
-                    k *= Math.Min(1f, Math.Max(0f, (k - n0) / (n1 - n0)));
+                    float k = Stmavenie(lc, lb, i, cw, ch, posun, n0, n1);
+                    if (lc2 != null) k = Math.Max(k, Stmavenie(lc2, lb2, i, cw, ch, posun, 0.2f, 0.35f));
                     s = Math.Min(0.85f, k) * tien[i];
                 }
                 float a = alfa[i], A = a + (1 - a) * s;
@@ -667,6 +671,32 @@ public static class Vrstva
         });
         farba = f;
         return o;
+    }
+
+    static float[] Luma(Obr o)
+    {
+        var l = new float[o.R.Length];
+        for (int i = 0; i < l.Length; i++) l[i] = 0.299f * o.R[i] + 0.587f * o.G[i] + 0.114f * o.B[i];
+        return l;
+    }
+
+    // Darkening of luma lc against lb at pixel i (lb shifted by up to posun pixels: the value
+    // closest to lc), ignored below n0, full above n1.
+    static float Stmavenie(float[] lc, float[] lb, int i, int w, int h, int posun, float n0, float n1)
+    {
+        float yc = lc[i], yb = lb[i];
+        int y = i / w, x = i - y * w, step = Math.Max(1, posun / 2);
+        for (int dy = -posun; posun > 0 && dy <= posun; dy += step)
+        {
+            int yy = Math.Min(h - 1, Math.Max(0, y + dy));
+            for (int dx = -posun; dx <= posun; dx += step)
+            {
+                float v = lb[yy * w + Math.Min(w - 1, Math.Max(0, x + dx))];
+                if (Math.Abs(v - yc) < Math.Abs(yb - yc)) yb = v;
+            }
+        }
+        float k = 1f - Math.Min(1f, yc / Math.Max(1f, yb));
+        return k * Math.Min(1f, Math.Max(0f, (k - n0) / (n1 - n0)));
     }
 
     // Opacity of the object's edge: how far pixel c lies on the way from the wall behind it (wall)
@@ -733,6 +763,86 @@ public static class Vrstva
                 o[i] = best;
             }
         });
+        return o;
+    }
+
+    // The green key (painted by the model, often a little taller than the object) without the
+    // rows it reaches above the object's top edge in img: in every column, from the key's top edge
+    // down, the first row where img differs (max channel over prah) from the wall above that edge
+    // (the rows gap..2 gap above it), at most max rows. The cut of a column is the median of the
+    // measured columns within okno pixels; columns [skip0, skip1) (a tap behind the object: no
+    // wall above it) and those without a measured neighbour are interpolated between the nearest
+    // cuts on either side. The median cut goes to presah.
+    public static float[] OrezKluc(Obr img, float[] key, int w, int h, int max, int gap, float prah, int skip0, int skip1, int okno, out int presah)
+    {
+        var top = new int[w];
+        var e = new int[w];
+        for (int x = 0; x < w; x++)
+        {
+            top[x] = -1;
+            e[x] = -1;
+            for (int y = 0; y < h; y++) if (key[y * w + x] > 0.5f) { top[x] = y; break; }
+            int yk = top[x];
+            if (yk < 2 * gap || (x >= skip0 && x < skip1)) continue;
+            float r = 0, g = 0, b = 0;
+            for (int y = yk - 2 * gap; y < yk - gap; y++) { int i = y * w + x; r += img.R[i]; g += img.G[i]; b += img.B[i]; }
+            r /= gap; g /= gap; b /= gap;
+            for (int y = yk; y <= Math.Min(h - 1, yk + max); y++)
+            {
+                int i = y * w + x;
+                if (Math.Max(Math.Abs(img.R[i] - r), Math.Max(Math.Abs(img.G[i] - g), Math.Abs(img.B[i] - b))) > prah) { e[x] = y - yk; break; }
+            }
+        }
+        var es = new float[w];
+        var all = new System.Collections.Generic.List<int>();
+        for (int x = 0; x < w; x++)
+        {
+            es[x] = -1;
+            if (top[x] < 0) continue;
+            var win = new System.Collections.Generic.List<int>();
+            for (int j = Math.Max(0, x - okno); j <= Math.Min(w - 1, x + okno); j++) if (e[j] >= 0) win.Add(e[j]);
+            if (win.Count == 0) continue;
+            win.Sort();
+            es[x] = win[win.Count / 2];
+            all.Add(win[win.Count / 2]);
+        }
+        all.Sort();
+        presah = all.Count > 0 ? all[all.Count / 2] : 0;
+        for (int x = 0; x < w; x++)
+        {
+            if (top[x] < 0 || es[x] >= 0) continue;
+            int l = x - 1, rr = x + 1;
+            while (l >= 0 && es[l] < 0) l--;
+            while (rr < w && es[rr] < 0) rr++;
+            if (l >= 0 && rr < w) es[x] = es[l] + (es[rr] - es[l]) * (x - l) / (float)(rr - l);
+            else if (l >= 0) es[x] = es[l];
+            else if (rr < w) es[x] = es[rr];
+            else es[x] = 0;
+        }
+        var o = (float[])key.Clone();
+        for (int x = 0; x < w; x++)
+        {
+            if (top[x] < 0) continue;
+            int y0 = top[x];
+            while (y0 > 0 && key[(y0 - 1) * w + x] > 0) y0--;   // the soft edge above the top
+            int y1 = top[x] + (int)Math.Round(es[x]);
+            for (int y = y0; y < y1; y++) o[y * w + x] = 0;
+        }
+        return o;
+    }
+
+    // Thin yellowish parts (the diffuser's reeds on a beige wall): where (R + G) / 2 - B is above
+    // its local mean (box blur radius r) by t0..t1. The wall's texture changes mostly in
+    // brightness, so it stays out (a difference to another generation catches the texture too).
+    public static float[] Tenke(Obr img, int r, float t0, float t1)
+    {
+        var s = img.Rozmaz(r);
+        var o = new float[img.R.Length];
+        for (int i = 0; i < o.Length; i++)
+        {
+            float d = (img.R[i] + img.G[i]) / 2 - img.B[i] - ((s.R[i] + s.G[i]) / 2 - s.B[i]);
+            o[i] = Math.Min(1f, Math.Max(0f, (d - t0) / (t1 - t0)));
+        }
         return o;
     }
 
