@@ -89,6 +89,7 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | **Obklady v 4K zrnité, „horšie ako prvá 1K verzia“** (kolega 14. 10.) | model v 4K kreslil kameň ako reliéf so svetlými zrnkami, travertín ako vystúpené vlny; referenčné fotky majú len 640 px; v 1K na reliéf nemal rozlíšenie | prompt rovnej hladkej platne + obklady a všetko na nich v 2K (kolega vybral 15. 10. z testu 1K / 4K / 4K a 2K s novým promptom); povrch obkladu je v kontrolnom zozname |
 | **Umývadlová batéria na Calacatte, Graphite a Travertine: svetlý obrys s rozmazanou čiernou škvrnou** (používateľ 15. 10., po pregenerovaní obkladov v 2K) | vstup `@obklad` už mal zmenšenú batériu (`mierka`), `zostav` ju zmenšil druhýkrát; kontrola po zostavení pozerala celý výrez batérií, kde je umývadlová batéria malá | `zmensene: true` vo `vysledky.json` → bez druhého zmenšenia; kontrola v kroku 3 aj s `--oblast bateria-umyvadlo` |
 | **Dlažba Stone Life Graphite nie je totožná s produktom** (používateľ 15. 10.): svetlejšia, do olivova, zrnitý reliéf | kie 4K, rovnaká príčina ako pri obkladoch; referencia má len 407 px | dlažba v 2K, prompt rovnej hladkej dlaždice a tón produktu slovami |
+| Svetlý lem okolo nôh stoličky na tmavej dlažbe, svetlejšie miesto pod sedadlom (používateľ 15. 10.) | stolička je v dlažbe aj v podklade rovnaká, mäkký okraj masky z rozdielu sa preto stratil pár px pred ňou a presvitala pôvodná svetlá dlažba z obrázka obkladu | vrstva dlažby až po okraj zeleného kľúča (`kluc-dlazba`); kontrola `--oblast stolicka` na tmavej dlažbe |
 | Batéria na Graphite väčšia ako na ostatných obkladoch, svetlá páka | model pri dočistení batériu zväčšil (~1,2×) a páku prekreslil; jadro sa obnovuje len vnútri, tenká páka doň nepatrí | `Set-ScaledCleanup`: batéria zo vstupu generácie, zväčšený okraj nahradí uvoľnená stena |
 | Zvyšok starej misy vedľa Savoy (Travertine), schodík na polici (Graphite) | nie výrez doplnkov (pôvodný odhad), ale samotná AI: úzky pruh starej misy vedľa širokej Savoy nechala ako dizajn, pri tmavej stene prefarbila zadný okraj police do teplej | `pozadieZ`: miesto po starej mise mimo Savoy z výsledku užšieho okrúhleho umývadla na tom istom obklade; `polica` už od zadnej hrany police |
 
@@ -115,7 +116,6 @@ Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už 
 - Pravý okraj Savoy na Graphite a Travertine má pri zväčšení tenký svetlejší lem (AI ju na obklade nakreslila o pár px širšiu, jadro sa obnovuje len vnútri).
 - Okolo batérie na pôvodnom obklade je slabo svetlejší obdĺžnik (AI prekreslila stenu, vrstva ju čiastočne berie).
 - V okrúhlom umývadle je pod batériou na vnútornej stene misy svetlejší pás. Je tam aj s pôvodnou chrómovou batériou, nakreslil ho model pri generovaní umývadla.
-- Pri dlažbe Stone Life Graphite na Calacatte a Graphite má stolička pri nohách tenký svetlejší lem (vrstva dlažby nesie stoličku z generácie dlažby na pôvodnom obklade).
 - Pri rozete sifónu na Graphite a Travertine slabý svetlý oblúk starej chrómovej rozety (viditeľný až pri ~3× zväčšení). Na Graphite pri 4× zväčšení tenký svetlý prúžok vľavo od tela umývadlovej batérie.
 
 ## 9. Prostredie

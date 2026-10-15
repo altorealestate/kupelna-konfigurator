@@ -124,14 +124,17 @@ function Get-Plate([string]$id) {
 # Category option "kluc": a helper result with the whole surface painted green. The difference to
 # the base misses spots where the old and the new surface have a similar tone (the floor in the
 # shadow under the shelf), so the inside of the surface comes from the key, its edges from the
-# difference.
+# difference. Up to an object standing on it (the stool), which is the same in the new surface and
+# the base, the soft difference fades out a few pixels early and the cladding image's old floor
+# showed as a light rim: there the key's own edge is used.
 function Get-SurfaceMask($img, $kat) {
     $a = Get-Mask $img $kat $baseBlur
     if (-not $kat.kluc -or -not $results.Contains($kat.kluc)) { return , $a }
     $k = (Get-Aligned $results $kat.kluc $kat).Zelena(50, 110)
     [Mapa]::Oblast($k, $W, $H, [double[]]$kat.roi)
     $inner = [Mapa]::Rozmaz([Mapa]::Zuz($k, $W, $H, (Get-Px 2)), $W, $H, (Get-Px 1))
-    , [Mapa]::Max([Mapa]::Min($a, [Mapa]::Rozsir($k, $W, $H, (Get-Px 3))), $inner)
+    $edge = [Mapa]::Rozmaz($k, $W, $H, 1)
+    , [Mapa]::Max([Mapa]::Max([Mapa]::Min($a, [Mapa]::Rozsir($k, $W, $H, (Get-Px 3))), $inner), $edge)
 }
 
 # Pre-pass for objects placed on every cladding: their result on the original cladding, the
