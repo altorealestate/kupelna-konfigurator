@@ -222,21 +222,32 @@ foreach ($cid in @($cfg.kategorie | ForEach-Object { $_.bezObjektov } | Where-Ob
     $s.empty = $base.Kopia()
     $s.empty.Prekry((Get-StripFill $base $s), $m)
     $s.old = Get-StripMetal $base $s 30 50
+    # The fill is not quite the base's floor right behind the drain, so the original metal got a
+    # faint rim of that light floor (a light band along the drain on dark floors): only the solid
+    # metal and a thin edge.
+    $solid = [Mapa]::Prah($s.old, 0.6, 0.9)
+    $s.old = [Mapa]::Min($s.old, [Mapa]::Rozmaz([Mapa]::Rozsir($solid, $W, $H, (Get-Px 1)), $W, $H, 1))
+    # Floor layers are filled only under the original metal (their own drain is drawn there, within
+    # a pixel or two); behind it and past its end they keep their own floor. Rows moved up there
+    # showed the highlights in front of the drain, shifted joints and, at the right end, the frame of
+    # the glass screen.
+    $s.fill = [Mapa]::Min($m, [Mapa]::Rozmaz([Mapa]::Rozsir($solid, $W, $H, (Get-Px 1)), $W, $H, 1))
     $strips[$cid] = $s
     if ($Ladenie) {
         [Obr]::ZMasky($m, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "pas-$cid.jpg"), 80)
         [Obr]::ZMasky($s.old, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "pas-$cid-povodny.jpg"), 80)
+        [Obr]::ZMasky($s.fill, $W, $H).Zmensi(2).UlozJpg((Join-Path $Ladenie "pas-$cid-vypln.jpg"), 80)
     }
 }
 
-# A floor layer in the strips: the floor just below moved up (the model draws its own drain or
-# its frame there, behind the glass with too little contrast to tell); opaque in the whole strip.
+# A floor layer in the strips: where the model drew its own drain, the floor just below moved up
+# (behind the glass its drain or frame has too little contrast to tell); opaque in the whole strip.
 function Set-Strips($img, $alfa, $kat) {
     $a = $alfa
     foreach ($cid in @($kat.bezObjektov)) {
         $s = $strips[$cid]
         if (-not $s) { continue }
-        $img.Prekry((Get-StripFill $img $s), $s.mask)
+        $img.Prekry((Get-StripFill $img $s), $s.fill)
         $a = [Mapa]::Max($a, $s.mask)
     }
     , $a
