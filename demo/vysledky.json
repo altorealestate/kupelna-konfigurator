@@ -1,16 +1,17 @@
 {
     "obklad-travertine":  {
-                              "subor":  "vystupy\\test-modely\\20261013-155757_dbe7607d_1.png",
-                              "taskId":  "dbe7607d0cc32a51393f30be3a86a1ef",
-                              "sekund":  65.8,
+                              "subor":  "vystupy\\20261015-092018_a6db30fe_1.png",
+                              "taskId":  "req_a6db30fea1c74ea89fb2c1dd1cb97b39",
+                              "sekund":  43.6,
                               "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
                               "zarovnanie":  [
-                                                 0.99794,
-                                                 0.99425,
-                                                 -0.25,
-                                                 -7.75
+                                                 0.99969,
+                                                 0.99881,
+                                                 0,
+                                                 -0.38
                                              ],
-                              "zhoda":  0.798
+                              "zhoda":  0.892,
+                              "cenaUsd":  0.0882
                           },
     "prazdne-baterie":  {
                             "subor":  "vystupy\\20261013-164242_def2f5ec_1.png",
@@ -26,30 +27,32 @@
                             "zhoda":  0.761
                         },
     "obklad-calacatta":  {
-                             "subor":  "vystupy\\20261013-164243_ca9b6157_1.png",
-                             "taskId":  "ca9b6157fc5ef3cc7dce6b2236f731e2",
-                             "sekund":  73.3,
+                             "subor":  "vystupy\\20261015-092018_408dde9b_1.png",
+                             "taskId":  "req_408dde9b42ad4652b3641151f32c2ae6",
+                             "sekund":  43.6,
                              "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
                              "zarovnanie":  [
-                                                0.99519,
-                                                0.97431,
-                                                -5.38,
-                                                -34.75
+                                                0.99963,
+                                                0.99869,
+                                                0.12,
+                                                -0.5
                                             ],
-                             "zhoda":  0.76
+                             "zhoda":  0.879,
+                             "cenaUsd":  0.0882
                          },
     "obklad-graphit":  {
-                           "subor":  "vystupy\\20261013-200454_d9353535_1.png",
-                           "taskId":  "d93535352ddbb105677a76ad0cd47699",
-                           "sekund":  65.5,
+                           "subor":  "vystupy\\20261015-092018_dd95b88b_1.png",
+                           "taskId":  "req_dd95b88b1d98487faf48c1d1e34467b3",
+                           "sekund":  42.9,
                            "vstup":  "demo\\zdroje\\KUPELNA_ST1_4096.jpg",
                            "zarovnanie":  [
-                                              0.999,
-                                              0.99619,
-                                              2,
-                                              -2.38
+                                              0.99956,
+                                              0.99931,
+                                              -0.12,
+                                              -1
                                           ],
-                           "zhoda":  0.683
+                           "zhoda":  0.798,
+                           "cenaUsd":  0.0882
                        },
     "dlazba-graphite":  {
                             "subor":  "vystupy\\20261013-165224_77ebfa40_1.png",
@@ -130,17 +133,18 @@
                         "zhoda":  0.645
                     },
     "baterie-black@obklad-graphit":  {
-                                         "subor":  "vystupy\\20261014-100604_ba9d0b46_1.png",
-                                         "taskId":  "ba9d0b466310138e1ba6b8a191285c30",
-                                         "sekund":  60.3,
+                                         "subor":  "vystupy\\20261015-092240_f6e9abc4_1.png",
+                                         "taskId":  "req_f6e9abc4dc814c8e9fdeada3b6ba0a63",
+                                         "sekund":  47.8,
                                          "vstup":  "vystupy\\vstupy\\baterie-black@obklad-graphit.jpg",
                                          "zarovnanie":  [
-                                                            0.999,
                                                             0.99994,
-                                                            2.12,
-                                                            -1.38
+                                                            1.00006,
+                                                            -0.62,
+                                                            -0.62
                                                         ],
-                                         "zhoda":  0.87
+                                         "zhoda":  0.892,
+                                         "cenaUsd":  0.0801
                                      },
     "baterie-bronze":  {
                            "subor":  "vystupy\\20261014-100338_7244af04_1.png",
@@ -182,147 +186,158 @@
                                   "zhoda":  0.87
                               },
     "umyvadlo-okruhle@obklad-graphit":  {
-                                            "subor":  "vystupy\\20261013-200714_45efd91a_1.png",
-                                            "taskId":  "45efd91acc42075cd6248c796043a85e",
-                                            "sekund":  62.9,
+                                            "subor":  "vystupy\\20261015-092420_683aa690_1.png",
+                                            "taskId":  "req_683aa690cc5b4ef79903d751173e0779",
+                                            "sekund":  39.2,
                                             "vstup":  "vystupy\\vstupy\\umyvadlo-okruhle@obklad-graphit.jpg",
                                             "zarovnanie":  [
-                                                               0.99831,
-                                                               0.99544,
-                                                               1.12,
-                                                               -7.38
+                                                               0.99944,
+                                                               0.99988,
+                                                               -0.25,
+                                                               -0.75
                                                            ],
-                                            "zhoda":  0.824
+                                            "zhoda":  0.912,
+                                            "cenaUsd":  0.0799
                                         },
     "baterie-black@obklad-calacatta":  {
-                                           "subor":  "vystupy\\20261014-100550_dad50d94_1.png",
-                                           "taskId":  "dad50d9495f8f9340d7fd373988c4344",
-                                           "sekund":  55,
+                                           "subor":  "vystupy\\20261015-092221_2f52609b_1.png",
+                                           "taskId":  "req_2f52609b7208413e93f287a9111d5d95",
+                                           "sekund":  42.8,
                                            "vstup":  "vystupy\\vstupy\\baterie-black@obklad-calacatta.jpg",
                                            "zarovnanie":  [
-                                                              0.99794,
-                                                              0.99925,
-                                                              2.5,
-                                                              -1.75
+                                                              0.99963,
+                                                              0.99919,
+                                                              -0.12,
+                                                              -0.62
                                                           ],
-                                           "zhoda":  0.846
+                                           "zhoda":  0.955,
+                                           "cenaUsd":  0.0801
                                        },
     "baterie-black@obklad-travertine":  {
-                                            "subor":  "vystupy\\20261014-100601_ce441b65_1.png",
-                                            "taskId":  "ce441b657c9a873ef277a9e99425cd0e",
-                                            "sekund":  50.3,
+                                            "subor":  "vystupy\\20261015-092246_342a3a1d_1.png",
+                                            "taskId":  "req_342a3a1df7cc4dd99c13998ba0f1edde",
+                                            "sekund":  41.2,
                                             "vstup":  "vystupy\\vstupy\\baterie-black@obklad-travertine.jpg",
                                             "zarovnanie":  [
-                                                               0.99819,
-                                                               0.99875,
-                                                               2,
-                                                               -1.75
+                                                               0.99962,
+                                                               0.99994,
+                                                               0,
+                                                               -0.62
                                                            ],
-                                            "zhoda":  0.897
+                                            "zhoda":  0.935,
+                                            "cenaUsd":  0.0801
                                         },
     "baterie-bronze@obklad-calacatta":  {
-                                            "subor":  "vystupy\\20261014-100726_a5bf65c3_1.png",
-                                            "taskId":  "a5bf65c3c4ea33b9232b8b98522d4681",
-                                            "sekund":  128.3,
+                                            "subor":  "vystupy\\20261015-092259_c28783e7_1.png",
+                                            "taskId":  "req_c28783e732624c729493849999261143",
+                                            "sekund":  42.8,
                                             "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-calacatta.jpg",
                                             "zarovnanie":  [
-                                                               0.99875,
-                                                               0.99881,
-                                                               0.38,
-                                                               -2
+                                                               1,
+                                                               0.99925,
+                                                               -0.38,
+                                                               -0.62
                                                            ],
-                                            "zhoda":  0.832
+                                            "zhoda":  0.931,
+                                            "cenaUsd":  0.0801
                                         },
     "baterie-bronze@obklad-graphit":  {
-                                          "subor":  "vystupy\\20261014-100707_113b5f8b_1.png",
-                                          "taskId":  "113b5f8bd6a81f086f350e78c8df4d0d",
-                                          "sekund":  101.9,
+                                          "subor":  "vystupy\\20261015-092313_c8610127_1.png",
+                                          "taskId":  "req_c86101277e824ace9377bc3dcc2fc749",
+                                          "sekund":  43.3,
                                           "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-graphit.jpg",
                                           "zarovnanie":  [
-                                                             0.99731,
-                                                             0.99862,
-                                                             0.62,
-                                                             -1.75
+                                                             0.99988,
+                                                             1,
+                                                             -0.5,
+                                                             -0.62
                                                          ],
-                                          "zhoda":  0.843
+                                          "zhoda":  0.889,
+                                          "cenaUsd":  0.0801
                                       },
     "baterie-bronze@obklad-travertine":  {
-                                             "subor":  "vystupy\\20261014-100644_29aa67f3_1.png",
-                                             "taskId":  "29aa67f300cbc3be8db00d5ee27dd48e",
-                                             "sekund":  72.2,
+                                             "subor":  "vystupy\\20261015-092324_34ecd88c_1.png",
+                                             "taskId":  "req_34ecd88c64724198b2eb7ffaf8218994",
+                                             "sekund":  42.8,
                                              "vstup":  "vystupy\\vstupy\\baterie-bronze@obklad-travertine.jpg",
                                              "zarovnanie":  [
-                                                                0.99838,
-                                                                0.99956,
-                                                                1.25,
-                                                                -2.25
+                                                                0.99931,
+                                                                0.99994,
+                                                                0,
+                                                                -0.38
                                                             ],
-                                             "zhoda":  0.888
+                                             "zhoda":  0.908,
+                                             "cenaUsd":  0.0801
                                          },
     "umyvadlo-savoy@obklad-calacatta":  {
-                                            "subor":  "vystupy\\20261014-090828_09a2fc10_1.png",
-                                            "taskId":  "09a2fc103de51d1d6040cf3399328912",
-                                            "sekund":  81.8,
+                                            "subor":  "vystupy\\20261015-092332_f4002e58_1.png",
+                                            "taskId":  "req_f4002e58bc5f49f3a4e0a3dcb74d8307",
+                                            "sekund":  40,
                                             "vstup":  "vystupy\\vstupy\\umyvadlo-savoy@obklad-calacatta.jpg",
                                             "zarovnanie":  [
-                                                               0.99794,
-                                                               0.99906,
-                                                               2.12,
-                                                               -1.75
+                                                               0.99981,
+                                                               0.9995,
+                                                               -0.25,
+                                                               -0.5
                                                            ],
-                                            "zhoda":  0.873
+                                            "zhoda":  0.959,
+                                            "cenaUsd":  0.0799
                                         },
     "umyvadlo-savoy@obklad-graphit":  {
-                                          "subor":  "vystupy\\20261013-200640_26d8ef8f_1.png",
-                                          "taskId":  "26d8ef8f3c6caf1f0ef1ee9a715ba98a",
-                                          "sekund":  41.2,
+                                          "subor":  "vystupy\\20261015-092346_39723e7e_1.png",
+                                          "taskId":  "req_39723e7e92fe4ec499a65193294b17f9",
+                                          "sekund":  41.5,
                                           "vstup":  "vystupy\\vstupy\\umyvadlo-savoy@obklad-graphit.jpg",
                                           "zarovnanie":  [
-                                                             0.999,
-                                                             0.99969,
-                                                             1.88,
-                                                             -1.25
+                                                             0.99938,
+                                                             0.99975,
+                                                             -0.12,
+                                                             -0.75
                                                          ],
-                                          "zhoda":  0.873
+                                          "zhoda":  0.911,
+                                          "cenaUsd":  0.0799
                                       },
     "umyvadlo-savoy@obklad-travertine":  {
-                                             "subor":  "vystupy\\20261013-170304_a3e66602_1.png",
-                                             "taskId":  "a3e666024192897e8702d8bd5a897d8f",
-                                             "sekund":  81,
+                                             "subor":  "vystupy\\20261015-092357_54edc992_1.png",
+                                             "taskId":  "req_54edc992d8ae473fa7439d2aa4b071eb",
+                                             "sekund":  40.6,
                                              "vstup":  "vystupy\\vstupy\\umyvadlo-savoy@obklad-travertine.jpg",
                                              "zarovnanie":  [
-                                                                0.99606,
-                                                                1.00081,
-                                                                1.12,
-                                                                -2
+                                                                0.99956,
+                                                                0.99981,
+                                                                -0.25,
+                                                                -0.62
                                                             ],
-                                             "zhoda":  0.822
+                                             "zhoda":  0.942,
+                                             "cenaUsd":  0.0799
                                          },
     "umyvadlo-okruhle@obklad-calacatta":  {
-                                              "subor":  "vystupy\\20261013-170222_bbd0f9f8_1.png",
-                                              "taskId":  "bbd0f9f8a407b3dfb0c9bae6764e68ea",
-                                              "sekund":  39.8,
+                                              "subor":  "vystupy\\20261015-092408_4b3bfb0b_1.png",
+                                              "taskId":  "req_4b3bfb0b717a4608a5a3fe5b8d3e8502",
+                                              "sekund":  39.3,
                                               "vstup":  "vystupy\\vstupy\\umyvadlo-okruhle@obklad-calacatta.jpg",
                                               "zarovnanie":  [
-                                                                 0.99675,
-                                                                 0.99887,
-                                                                 2.75,
-                                                                 -1.5
+                                                                 0.99988,
+                                                                 0.99937,
+                                                                 -0.25,
+                                                                 -0.62
                                                              ],
-                                              "zhoda":  0.847
+                                              "zhoda":  0.961,
+                                              "cenaUsd":  0.0799
                                           },
     "umyvadlo-okruhle@obklad-travertine":  {
-                                               "subor":  "vystupy\\20261013-170232_aa96c147_1.png",
-                                               "taskId":  "aa96c1476d40090757f30a774f55a167",
-                                               "sekund":  46.5,
+                                               "subor":  "vystupy\\20261015-092432_266d001a_1.png",
+                                               "taskId":  "req_266d001abd344866bd3d4e1d8c608cc2",
+                                               "sekund":  39.5,
                                                "vstup":  "vystupy\\vstupy\\umyvadlo-okruhle@obklad-travertine.jpg",
                                                "zarovnanie":  [
-                                                                  0.99894,
-                                                                  1.00044,
-                                                                  1.88,
-                                                                  -2
+                                                                  0.99956,
+                                                                  0.99962,
+                                                                  -0.25,
+                                                                  -0.62
                                                               ],
-                                               "zhoda":  0.885
+                                               "zhoda":  0.944,
+                                               "cenaUsd":  0.0799
                                            },
     "kluc-umyvadlo":  {
                           "subor":  "vystupy\\20261014-090626_c072f6e2_1.png",
@@ -403,56 +418,87 @@
                          "zhoda":  0.87
                      },
     "prazdne-doplnky@obklad-calacatta":  {
-                                             "subor":  "vystupy\\20261014-101537_88f18979_1.png",
-                                             "taskId":  "88f189799cb2c989e01c9d1cb8a1d8e1",
-                                             "sekund":  58.4,
+                                             "subor":  "vystupy\\20261015-092159_22a85e31_1.png",
+                                             "taskId":  "req_22a85e3125914939956ee3cc649ba428",
+                                             "sekund":  37.3,
                                              "vstup":  "vystupy\\vstupy\\prazdne-doplnky@obklad-calacatta.jpg",
                                              "zarovnanie":  [
-                                                                0.99781,
-                                                                0.99181,
-                                                                1.75,
-                                                                -8.25
+                                                                0.99975,
+                                                                0.99956,
+                                                                -0.12,
+                                                                -0.38
                                                             ],
-                                             "zhoda":  0.822
+                                             "zhoda":  0.9,
+                                             "cenaUsd":  0.0797
                                          },
     "prazdne-doplnky@obklad-graphit":  {
-                                           "subor":  "vystupy\\20261014-101549_326a4a16_1.png",
-                                           "taskId":  "326a4a168d4b0b1af6d4c0225b08a304",
-                                           "sekund":  73.2,
+                                           "subor":  "vystupy\\20261015-092203_3f2f6e00_1.png",
+                                           "taskId":  "req_3f2f6e00ce5746509dcc1c5625f4f1b1",
+                                           "sekund":  41,
                                            "vstup":  "vystupy\\vstupy\\prazdne-doplnky@obklad-graphit.jpg",
                                            "zarovnanie":  [
-                                                              0.99919,
-                                                              0.99987,
-                                                              1.88,
-                                                              -1.25
+                                                              0.99944,
+                                                              0.99981,
+                                                              -0.12,
+                                                              -0.75
                                                           ],
-                                           "zhoda":  0.864
+                                           "zhoda":  0.896,
+                                           "cenaUsd":  0.0797
                                        },
     "prazdne-doplnky@obklad-travertine":  {
-                                              "subor":  "vystupy\\20261014-101533_e956307a_1.png",
-                                              "taskId":  "e956307a069d04fed2d08f620dbe7075",
-                                              "sekund":  52.4,
+                                              "subor":  "vystupy\\20261015-092204_f5e67176_1.png",
+                                              "taskId":  "req_f5e67176b74e4441932d741770c97cae",
+                                              "sekund":  40.9,
                                               "vstup":  "vystupy\\vstupy\\prazdne-doplnky@obklad-travertine.jpg",
                                               "zarovnanie":  [
-                                                                 0.99825,
-                                                                 0.99881,
-                                                                 1.75,
-                                                                 -1.62
+                                                                 0.99956,
+                                                                 0.99975,
+                                                                 -0.25,
+                                                                 -0.5
                                                              ],
-                                              "zhoda":  0.845
+                                              "zhoda":  0.893,
+                                              "cenaUsd":  0.0797
                                           },
     "zrkadlo@obklad-graphit":  {
-                                   "subor":  "vystupy\\20261014-132259_80e5d7f0_1.png",
-                                   "taskId":  "req_80e5d7f026934648ae55b32e5916e949",
-                                   "sekund":  48.2,
+                                   "subor":  "vystupy\\20261015-092621_eacb1808_1.png",
+                                   "taskId":  "req_eacb18087089481c93b3034df94bffe0",
+                                   "sekund":  40.3,
                                    "vstup":  "vystupy\\vstupy\\zrkadlo@obklad-graphit.jpg",
                                    "zarovnanie":  [
                                                       0.99962,
-                                                      0.99925,
-                                                      0.12,
-                                                      -1.12
+                                                      0.99988,
+                                                      -0.12,
+                                                      -0.75
                                                   ],
-                                   "zhoda":  0.901,
-                                   "cenaUsd":  0.1535
-                               }
+                                   "zhoda":  0.937,
+                                   "cenaUsd":  0.0878
+                               },
+    "zrkadlo@obklad-calacatta":  {
+                                     "subor":  "vystupy\\20261015-092621_0b270cba_1.png",
+                                     "taskId":  "req_0b270cbaf6384329b4119e5da8a7c97b",
+                                     "sekund":  41.1,
+                                     "vstup":  "vystupy\\vstupy\\zrkadlo@obklad-calacatta.jpg",
+                                     "zarovnanie":  [
+                                                        0.99975,
+                                                        0.99938,
+                                                        -0.12,
+                                                        -0.62
+                                                    ],
+                                     "zhoda":  0.97,
+                                     "cenaUsd":  0.0878
+                                 },
+    "zrkadlo@obklad-travertine":  {
+                                      "subor":  "vystupy\\20261015-092623_3f79b6c0_1.png",
+                                      "taskId":  "req_3f79b6c0ce6541b380a6564e56603e83",
+                                      "sekund":  42.6,
+                                      "vstup":  "vystupy\\vstupy\\zrkadlo@obklad-travertine.jpg",
+                                      "zarovnanie":  [
+                                                         0.99962,
+                                                         0.99975,
+                                                         -0.25,
+                                                         -0.5
+                                                     ],
+                                      "zhoda":  0.958,
+                                      "cenaUsd":  0.0878
+                                  }
 }

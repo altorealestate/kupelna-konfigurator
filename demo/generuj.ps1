@@ -50,6 +50,15 @@ $results = Read-Results
 
 $plateCat = $cfg.kategorie | Where-Object { $_.typ -eq 'podklad' } | Select-Object -First 1
 $plates = @($cfg.varianty | Where-Object { $_.kategoria -eq $plateCat.id })
+$plateIds = @($plates | ForEach-Object { $_.id })
+
+# The claddings and everything generated on them ("<...>@<cladding>") use the cladding category's
+# "resolution" when it has one (2K: at 4K the model drew the stone as a grainy relief); the result
+# is stretched to the base frame when it is aligned.
+function Get-Resolution([string]$id) {
+    if ($plateCat.resolution -and $plateIds -contains ($id -replace '^.*@', '')) { return [string]$plateCat.resolution }
+    [string]$cfg.resolution
+}
 
 $tasks = @(foreach ($p in @($cfg.pomocne)) {
     $refs = @($p.referencie | Where-Object { $_ } | ForEach-Object { Join-Path $root $_ })
@@ -128,10 +137,11 @@ if ($Plan) {
         $done += @($ready | ForEach-Object { $_.id })
         $left = @($left | Where-Object { $ready -notcontains $_ })
     }
-    $n = $waiting.Count
     if ($generator -eq 'kie') {
-        $per = $creditsPerImage[$cfg.resolution]
-        Write-Host ("{0} generation(s) x {1} kie.ai credits ({2}) = {3} credits, about `${4:N2}" -f $n, $per, $cfg.resolution, ($n * $per), ($n * $per * 0.005))
+        foreach ($g in @($waiting | Group-Object { Get-Resolution $_.id })) {
+            $per = $creditsPerImage[$g.Name]
+            Write-Host ("{0} generation(s) x {1} kie.ai credits ({2}) = {3} credits, about `${4:N2}" -f $g.Count, $per, $g.Name, ($g.Count * $per), ($g.Count * $per * 0.005))
+        }
         try { Write-Host "kie.ai balance: $(& $genScript -Credits) credits" } catch { Write-Warning "Balance not available: $($_.Exception.Message)" }
         return
     }
@@ -139,15 +149,18 @@ if ($Plan) {
     $model = $genArgs.Model; $quality = $genArgs.Quality
     if (-not $model) { $model = 'gpt-image-2.5-sunburst' }
     if (-not $quality) { $quality = 'high' }
-    $costs = @(Get-ChildItem -LiteralPath (Join-Path $root 'vystupy') -Filter '*.json' -File | ForEach-Object {
+    $earlier = @(Get-ChildItem -LiteralPath (Join-Path $root 'vystupy') -Filter '*.json' -File | ForEach-Object {
         try { Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
-    } | Where-Object { $_.api -eq 'openai' -and $_.costUsd -and $_.model -eq $model -and $_.param.quality -eq $quality -and $_.param.resolution -eq $cfg.resolution } |
-        ForEach-Object { [double]$_.costUsd })
-    if ($costs.Count) {
-        $avg = ($costs | Measure-Object -Average).Average
-        Write-Host ("{0} generation(s) x about `${1:N3} ({2}, quality {3}; average of {4} earlier) = about `${5:N2}" -f $n, $avg, $model, $quality, $costs.Count, ($n * $avg))
-    } else {
-        Write-Host "$n generation(s) with $model, quality $quality. OpenAI bills tokens; the price is known after the first result (costUsd in its .json)."
+    } | Where-Object { $_.api -eq 'openai' -and $_.costUsd -and $_.model -eq $model -and $_.param.quality -eq $quality })
+    foreach ($g in @($waiting | Group-Object { Get-Resolution $_.id })) {
+        $n = $g.Count
+        $costs = @($earlier | Where-Object { $_.param.resolution -eq $g.Name } | ForEach-Object { [double]$_.costUsd })
+        if ($costs.Count) {
+            $avg = ($costs | Measure-Object -Average).Average
+            Write-Host ("{0} generation(s) in {1} x about `${2:N3} ({3}, quality {4}; average of {5} earlier) = about `${6:N2}" -f $n, $g.Name, $avg, $model, $quality, $costs.Count, ($n * $avg))
+        } else {
+            Write-Host "$n generation(s) in $($g.Name) with $model, quality $quality. OpenAI bills tokens; the price is known after the first result (costUsd in its .json)."
+        }
     }
     return
 }
@@ -208,8 +221,10 @@ while ($waiting.Count -gt 0) {
     $jobs = foreach ($t in $ready) {
         $in = New-TaskInput $t
         $images = @((Join-Path $root $in)) + $t.refs
-        Write-Host "Starting $($t.id) ($($images.Count - 1) reference image(s))"
-        $job = Start-Job -Name $t.id -ArgumentList $genScript, $t.prompt, $images, $genArgs -ScriptBlock {
+        $opts = $genArgs.Clone()
+        $opts.Resolution = Get-Resolution $t.id
+        Write-Host "Starting $($t.id) ($($images.Count - 1) reference image(s), $($opts.Resolution))"
+        $job = Start-Job -Name $t.id -ArgumentList $genScript, $t.prompt, $images, $opts -ScriptBlock {
             param($script, $prompt, $images, $opts)
             Set-ExecutionPolicy -Scope Process Bypass -Force
             & $script -Prompt $prompt -Images $images @opts

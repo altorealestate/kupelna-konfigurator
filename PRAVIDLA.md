@@ -7,13 +7,14 @@ Kontrolný zoznam ku každej zmene dema a zoznam chýb, ktoré sa už stali. Ako
 - **Cena a súhlas.** Každá generácia stojí peniaze. OpenAI účtuje tokeny, takže cena závisí od rozlíšenia, kvality a počtu vstupných obrázkov a skutočná suma je v `.json` výsledku (`costUsd`). Staršie kie.ai stálo 16 kreditov ≈ $0,08 za 4K. Pred sériou spočítať úlohy a generovať až so súhlasom. Pri chybe neopakovať naslepo, najprv zistiť príčinu. OpenAI požiadavku po timeoute nemožno obnoviť, ale zaplatí sa.
   - `generuj.ps1 … -Plan` vypíše fázy, úlohy, cenu a zostatok; ten výpis ukázať pri žiadosti o súhlas.
   - Hook `kredity.sh` si spustenie `generuj.ps1`/`openai-image.ps1`/`kie-image.ps1` vyžiada potvrdiť. Neobchádzať ho (napr. iným volaním skriptu).
-  - Nový obklad: obklad + `prazdne-doplnky@` + 2× umývadlo@ + čierne@ + bronzové@ = 6 generácií.
+  - Nový obklad: obklad + `prazdne-doplnky@` + 2× umývadlo@ + čierne@ + bronzové@ + `zrkadlo@` = 7 generácií, všetky v 2K (asi $0,08–0,09 za kus).
   - Nová batéria (čierna + bronz): aspoň variant + bronz + 3× čierna@ + 3× bronz@ = 8 generácií, plus prípadné pomocné kroky (prefarbenie sifónu, otočenie).
   - Nové umývadlo: variant + `#kluc` + 3× @obklad = 5 generácií.
-- **Model:** OpenAI `gpt-image-2.5-sunburst` (`openai-image.ps1`, od 14. 10. 2026), demo v 4K, rýchle testy v 1K. Iný model len na výslovnú požiadavku. Všetky doterajšie výsledky dema sú z kie.ai `gpt-image-2-5-flare`: nová generácia z OpenAI sa môže líšiť farbou, ostrosťou aj prerámovaním, preto pri prvej sérii skontrolovať aj zhodu s výsledkami z kie (krok 3, `kontrola.py zostava`).
+- **Model:** OpenAI `gpt-image-2.5-sunburst` (`openai-image.ps1`, od 14. 10. 2026), demo v 4K, obklady a všetko na nich (`*@obklad-…`) v 2K (`resolution` kategórie obklad), rýchle testy v 1K. Iný model len na výslovnú požiadavku. Všetky doterajšie výsledky dema sú z kie.ai `gpt-image-2-5-flare`: nová generácia z OpenAI sa môže líšiť farbou, ostrosťou aj prerámovaním, preto pri prvej sérii skontrolovať aj zhodu s výsledkami z kie (krok 3, `kontrola.py zostava`).
 - **Model vždy prekreslí celý obrázok, nielen to, čo meníme.** Generácia obkladu prekreslí aj doplnky na polici, policu, umývadlo, batérie a žľab; generácia dlažby prekreslí žľab. Pre každú vec, ktorá sa meniť nemá a stránka ju berie z danej generácie, musí existovať poistka (vrátenie z podkladu, vyrezanie z vrstvy) alebo aspoň kontrola v kroku 2.
 - **Prompt:**
   - po anglicky;
+  - obklad: veta o rovnej hladkej platni s vytlačeným vzorom, bez reliéfu, zŕn a šumu (skopírovať z existujúceho obkladu vo `varianty.json`; pri leštenom obklade bez „matte“);
   - vymenovať všetky časti produktu (výtok vane, ručná sprcha, hadica, držiak…), inak ich model vynechá;
   - rozmer voči pôvodnému produktu (umývadlo Laufen living SQ 600×340 mm), inak model zachová pôvodnú šírku;
   - vymenovať, čo ostáva: kamera, svetlo, polica s presným tvarom a hrúbkou, umývadlo stojí na polici (nie zapustené), batérie, sifón, žľab, sklenená zástena, zrkadlo, vaňa, stolička, doplnky na polici, strop;
@@ -28,6 +29,7 @@ Kontrolný zoznam ku každej zmene dema a zoznam chýb, ktoré sa už stali. Ako
 Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obrázku: `python demo\kontrola.py generacia --posledne N` (alebo id, wildcardy) urobí hárky vstup | výsledok | rozdiel pre všetky oblasti zoznamu nižšie. `!` = zmena mimo oblasti úlohy. Čísla sú len vodítko, pri obklade sa mení celá stena, takže rozhoduje pohľad na hárky. Kontroluje sa nielen to, čo sa menilo, ale celý tento zoznam:
 
 - [ ] menený prvok: vzor a farba obkladu podľa referencie, tvar produktu, všetky jeho časti, správny rozmer
+- [ ] povrch obkladu pri veľkosti ako na stránke (~925 px a 1850 px): hladká platňa, nie reliéf ani zrnká
 - [ ] **doplnky na polici:** váza s vetvičkou, difuzér s tyčinkami, dávkovač mydla, podnos so zrolovaným uterákom. Tvar ani počet sa nesmie zmeniť (nesmie pribudnúť fľaša ani podnos).
 - [ ] polica (hrúbka, hrany, tieň) a umývadlo na nej, nie zapustené
 - [ ] batérie, sifón, krytka prepadu vane, sklenená zástena s chrómovou vzperou
@@ -81,11 +83,14 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 | Vloženie doplnkov + dočistenie cez AI | AI dokreslila druhý podnos a vetvičku | pri doplnkoch AI len maže, nevkladá |
 | Pás pôvodnej dlažby za žľabom aj pred ním | z dlažby sa vyrezávala celá plocha, kde sa líši grafitový žľab, a ten je širší (až k stene) a dlhší ako pôvodný | `pas` žľabu: dlažba je v ňom celá (doplnená z riadkov pod ním), každý žľab, aj pôvodný, má vrstvu len s kovom |
 | Umývadlová batéria asi 1,5× väčšia ako pôvodná (výška aj hrúbka tela) | prompt žiadal Tecturis S 240 Fine („240“ = vysoká verzia) | `mierka` variantu: batéria sa zmenší 0,67× okolo bodu, kde stojí na polici, na miesto pôvodnej; stena za ňou z `prazdne-baterie` prefarbená na obklad (podklad obkladu má pôvodnú batériu o pár px inde, kľúč umývadla je o ~13 px vyššie ako hrana misy → `okraj`) |
+| Odraz v zrkadle s pôvodným obkladom | prompt obkladu držal „the round mirror and its reflection“ | `zrkadlo@<obklad>` (odraz prekreslený na obklade bez doplnkov), zo zrkadlovej generácie sa berie len vnútro zrkadla |
+| **Obklady v 4K zrnité, „horšie ako prvá 1K verzia“** (kolega 14. 10.) | model v 4K kreslil kameň ako reliéf so svetlými zrnkami, travertín ako vystúpené vlny; referenčné fotky majú len 640 px; v 1K na reliéf nemal rozlíšenie | prompt rovnej hladkej platne + obklady a všetko na nich v 2K (kolega vybral 15. 10. z testu 1K / 4K / 4K a 2K s novým promptom); povrch obkladu je v kontrolnom zozname |
 | Zvyšok starej misy vedľa Savoy (Travertine), schodík na polici (Graphite) | nie výrez doplnkov (pôvodný odhad), ale samotná AI: úzky pruh starej misy vedľa širokej Savoy nechala ako dizajn, pri tmavej stene prefarbila zadný okraj police do teplej | `pozadieZ`: miesto po starej mise mimo Savoy z výsledku užšieho okrúhleho umývadla na tom istom obklade; `polica` už od zadnej hrany police |
 
 ## 6. Zámerné rozhodnutia (nemeniť bez dohody)
 
 - Generovanie cez OpenAI `gpt-image-2.5-sunburst` (predtým kie.ai GPT 2.5 flare), demo v 4K.
+- Obklady v 2K s promptom rovnej hladkej platne (kolega 15. 10. 2026: z porovnania 1K, 4K a nového promptu v 4K a 2K je 2K najlepšie). 4K pre obklady nevracať bez nového porovnania s ním.
 - Bronz = prefarbená čierna batéria (rovnaký tvar). Sprcha sa iba prefarbí.
 - Sifón a krytka prepadu majú farbu batérií. V katalógu nie sú, takže je to predpoklad, ktorý môže potvrdiť kolega.
 - Chrómová vzpera sklenenej zásteny ostáva chrómová (patrí k sklu, nie k Hansgrohe).
@@ -93,13 +98,9 @@ Porovnať výsledok s pôvodnou vizualizáciou vo výrezoch 1:1, nie v celom obr
 
 ## 7. Otvorené chyby
 
-Zo štyroch chýb nahlásených 14. 10. 2026 sú pás za žľabom, veľkosť batérie a konce Savoy opravené bez generovania (tabuľka v časti 5).
+Žiadne. Chyby nahlásené 14. 10. 2026 (pás za žľabom, odraz v zrkadle, veľkosť batérie, konce Savoy, zrnité obklady) sú opravené, pozri tabuľku v časti 5. Kontrola v kroku 2 a 3 preto zahŕňa aj pás podlahy za žľabom, odraz v zrkadle, veľkosť batérie voči pôvodnej, konce širokého umývadla a povrch obkladu.
 
-1. **Odraz v zrkadle si drží pôvodný obklad.** V zrkadle sa odráža protiľahlá stena s dverami a stena okolo dverí (hlavne nad nimi) ostáva pôvodná béžová na každom obklade, na Graphite len čiastočne sivá.
-   - Príčina: prompt obkladov hovorí „Keep … the round mirror and its reflection“, takže model odraz nemení.
-   - Oprava: `zrkadlo` vo `varianty.json` – AI prekreslí odraz na obklade bez doplnkov (`zrkadlo@<obklad>`, 3 generácie), `zostav` z toho vezme vnútro zrkadla (elipsa) a použije to aj ako pozadie doplnkov. Rozpracované: najprv testovacia generácia na Graphite.
-
-Kontrola v kroku 2 a 3 teraz zahŕňa aj tieto miesta: pás podlahy za žľabom, odraz v zrkadle, veľkosť batérie voči pôvodnej, konce širokého umývadla.
+Poznámky k zrnitosti obkladov (pre prípad, že sa vráti): zrnitosť bola už v surovom 4K výstupe, JPEG na stránke sa od neho takmer nelíšil. Vysokofrekvenčná energia steny Graphit pri zobrazení 1440 px: 4K kie 6,4, 1K 4,4, pôvodná vizualizácia 2,2. Stlmenie filtrom (frekvenčné oddelenie, 30 %) zrnká zmierni, reliéf nie. Test promptu je vo `vystupy\test-obklad\` (zmenil sa prompt aj model naraz).
 
 ## 8. Známe drobnosti (neopravené)
 

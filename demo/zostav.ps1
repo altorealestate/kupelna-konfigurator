@@ -98,8 +98,11 @@ function Get-Plate([string]$id) {
     if ($hasMirror) { $plate.Prekry((Get-Aligned $results $mirId), $mirror) }
     $bareId = "$($cfg.doplnky.prazdny)@$id"
     if (-not $acc -or -not $results.Contains($bareId)) { return $plate }
-    # The cladding without accessories; the mirror result is one, with the new reflection.
-    if ($hasMirror) { $bare = Get-Aligned $results $mirId $cfg.doplnky } else { $bare = Get-Aligned $results $bareId $cfg.doplnky }
+    # The cladding without accessories, with the new reflection inside the mirror (the vase stands
+    # in front of it). Only the mirror comes from the mirror result: it repaints the whole wall in
+    # another texture (from the tile photo), which must not show around the accessories.
+    $bare = Get-Aligned $results $bareId $cfg.doplnky
+    if ($hasMirror) { $bare.Prekry((Get-Aligned $results $mirId $cfg.doplnky), $mirror) }
     # The cladding's own copies, sometimes larger than the originals: where it differs from its
     # copy without accessories, near the originals.
     $own = [Mapa]::Prah([Obr]::Rozdiel($plate.Rozmaz((Get-Px 2)), $bare.Rozmaz((Get-Px 2))), 22, 44)

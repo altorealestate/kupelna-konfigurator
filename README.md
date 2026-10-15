@@ -6,9 +6,9 @@ Demo konfigurátora kúpeľne. Klient si vyberá obklad, dlažbu, batérie, umý
 
 ## Ako to funguje
 
-- Každý produkt z katalógu sa do pôvodnej vizualizácie (štandard ST1) vložil generáciou cez [kie.ai](https://kie.ai), model `gpt-image-2-5-flare-image-to-image` v rozlíšení 4K (3312 × 2480 px). Jedna generácia stála 16 kreditov (≈ $0,08) a trvala asi 1–2 min. Nové generácie idú priamo cez OpenAI API (`gpt-image-2.5-sunburst`, platí sa za tokeny).
-- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 35 generácií je tak 216 kombinácií.
-- Model v 4K scénu mierne preráma (zväčší alebo posunie o pár pixelov), preto sa každý výsledok pred skladaním automaticky zarovná na podklad.
+- Každý produkt z katalógu sa do pôvodnej vizualizácie (štandard ST1) vložil generáciou. Batérie, umývadlá, dlažba a žľab vznikli cez [kie.ai](https://kie.ai), model `gpt-image-2-5-flare-image-to-image` v rozlíšení 4K (3312 × 2480 px, 16 kreditov ≈ $0,08 za generáciu). Obklady a všetko, čo sa na nich generuje, idú od 15. 10. 2026 priamo cez OpenAI API (`gpt-image-2.5-sunburst`, kvalita high) v 2K (≈ $0,08–0,09 za generáciu, asi 40 s). V 4K model kreslil kameň ako zrnitý reliéf, preto prompt obkladu výslovne žiada rovnú hladkú platňu.
+- Kombinácie sa negenerujú. Z každej generácie sa vyreže len zmenená oblasť a stránka ju poskladá nad zvolený obklad. Z 37 generácií je tak 216 kombinácií.
+- Model scénu mierne preráma (zväčší alebo posunie o pár pixelov), preto sa každý výsledok pred skladaním automaticky zarovná na podklad; výsledok v 2K sa pritom roztiahne na rámec stránky.
 - Batérie a umývadlá majú na každom obklade rovnakú veľkosť a polohu: vygenerujú sa raz, tie isté pixely sa vložia na každý obklad a AI len dočistí okolie (zvyšky pôvodných batérií, svetlé okraje). Bronzové batérie sú prefarbené čierne, takže ani zmena farby neposunie tvar. K batériám patrí aj sifón pod umývadlom a krytka prepadu vane, majú rovnakú farbu ako batérie. Umývadlová batéria smeruje výtokom k divákovi ako pôvodná a má jej veľkosť (model ju nakreslil väčšiu, zmenší sa pri skladaní).
 - Sprchový žľab má vlastnú vrstvu len s kovom (aj pôvodný), dlažba je pod ním celá, takže pri každej dlažbe je pás pri stene nový.
 - Doplnky na polici (váza s vetvičkou, difuzér, mydlo, podnos) sú na každom obklade pôvodné: generácia obkladu ich prekreslí a zdeformuje, preto ich AI z obkladu len odstráni a vložia sa tie z pôvodnej vizualizácie.
